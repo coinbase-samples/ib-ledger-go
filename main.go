@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	port = flag.Int("port", 8080, "The server port")
+	port = flag.Int("port", 8443, "The server port")
 )
 
 func main() {
