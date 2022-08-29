@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package ledger;
+option go_package="LedgerApp/protos/ledger";
+
+import "google/protobuf/timestamp.proto";
+
+message Account {
+  string id = 1;
+  string portfolioId = 2;
+  string userId = 3;
+  string currency = 4;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message AccountBalance {
+  optional string id = 1;
+  string balance = 2;
+  string hold = 3;
+  string available = 4;
+  optional string account_id = 5;
+}
+
+enum TransactionType {
+  TRANSFER = 0;
+}
+
+enum TransactionStatus {
+  COMPLETE = 0;
+  FAILED = 1;
+  CANCELED = 2;
+  PENDING = 3;
+}
+
+message Transaction {
+  string id = 1;
+  string senderId = 2;
+  string receiverId = 3;
+  string requestId = 4;
+  google.protobuf.Timestamp created_at = 5;
+  TransactionType transactionType = 6;
+  TransactionStatus transactionStatus = 7;
+  optional google.protobuf.Timestamp finalized_at = 8;
+}
+
+message Hold {
+  string id = 1;
+  string account_id = 2;
+  string transaction_id = 3;
+  string amount = 4;
+  string direction = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp released_at = 7;
+}
+
+message Entry {
+  // UUID
+  string id = 1;
+  // Parent Portfolio Account UUID
+  string account_id = 2;
+  // Transaction UUID
+  string transaction_id = 3;
+  // Amount in asset's smallest unit e.g. Satoshi for Bitcoin
+  string amount = 4;
+  // CREDIT or DEBIT
+  string direction = 5;
+  google.protobuf.Timestamp created_at = 6;
+}

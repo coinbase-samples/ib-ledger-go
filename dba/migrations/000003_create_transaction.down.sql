@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS create_transaction_and_place_hold;

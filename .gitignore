@@ -1,0 +1,14 @@
+.idea
+.vscode
+
+*.iml
+
+.DS_Store
+
+*.out
+*.test
+go.work
+main
+
+.envrc
+LedgerApp

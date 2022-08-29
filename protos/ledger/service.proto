@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package ledger;
+
+option go_package="LedgerApp/protos/ledger";
+
+import "protos/ledger/model.proto";
+
+// Ledger API
+service Ledger {
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse) {}
+  rpc InitializeAccount(InitializeAccountRequest) returns (InitializeAccountResponse) {}
+  rpc GetAccount(GetAccountRequest) returns (GetAccountResponse) {}
+  rpc GetAccounts(GetAccountsRequest) returns (GetAccountsResponse) {}
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse) {}
+  rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse) {}
+  rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionResponse) {}
+  rpc PartialReleaseHold(PartialReleaseHoldRequest) returns (PartialReleaseHoldResponse) {}
+  rpc FinalizeTransaction(FinalizeTransactionRequest) returns (FinalizeTransactionResponse) {}
+}
+
+message HealthCheckRequest {
+}
+
+message HealthCheckResponse {
+  enum ServingStatus {
+    UNKNOWN = 0;
+    SERVING = 1;
+    NOT_SERVING = 2;
+  }
+  ServingStatus status = 1;
+}
+
+message InitializeAccountRequest {
+  string portfolioId = 1;
+  string userId = 2;
+  string currency = 3;
+}
+
+message InitializeAccountResponse {
+  Account account = 1;
+  AccountBalance accountBalance = 2;
+}
+
+message GetAccountRequest {
+  string id = 1;
+}
+
+message GetAccountResponse {
+  Account account = 1;
+}
+
+message GetAccountsRequest {
+  string userId = 1;
+}
+
+message GetAccountsResponse {
+  repeated Account accounts = 1;
+}
+
+message GetBalanceRequest {
+  optional string id = 1;
+}
+
+message GetBalanceResponse {
+  AccountBalance accountBalance = 1;
+}
+
+message GetBalancesRequest {
+  string accountId = 1;
+}
+
+message GetBalancesResponse {
+  repeated AccountBalance accountBalances = 1;
+}
+
+message CreateTransactionRequest {
+  string orderId = 1;
+  string senderId = 2;
+  string receiverId = 3;
+  string senderAmount = 4;
+  TransactionType transactionType = 5;
+  string requestId = 6;
+}
+
+message CreateTransactionResponse {
+  Transaction transaction = 1;
+}
+
+message PartialReleaseHoldRequest {
+  string orderId = 1;
+  string requestId = 2;
+  string senderAmount = 3;
+  string receiverAmount = 4;
+}
+
+message PartialReleaseHoldResponse {
+  bool successful = 1;
+  optional string failureMessage = 2;
+}
+
+message FinalizeTransactionRequest {
+  string orderId = 1;
+  string requestId = 2;
+  TransactionStatus finalizedStatus = 3;
+  optional string senderAmount = 4;
+  optional string receiverAmount = 5;
+}
+
+message FinalizeTransactionResponse {
+  bool successful = 1;
+  optional string failureMessage = 2;
+}
