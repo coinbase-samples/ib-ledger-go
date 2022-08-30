@@ -41,7 +41,7 @@ func NewPostgresHandler() *PostgresRepository {
 		log.Fatalf("no environment variable set for DB_PORT")
 	}
 
-	pool, err := pgxpool.Connect(context.Background(), fmt.Sprintf("postgres://%s:%s@%s:%s/database?sslmode=disable", dbUsername, dbPassword, dbEndpoint, dbPort))
+	pool, err := pgxpool.Connect(context.Background(), fmt.Sprintf("postgres://%s:%s@%s:%s/ledger", dbUsername, dbPassword, dbEndpoint, dbPort))
 
 	if err != nil {
 		log.Error("Failed to establish DB Pool")
