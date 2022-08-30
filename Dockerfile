@@ -1,10 +1,8 @@
-#ARG ACCOUNT_ID
-#ARG REGION
-#ARG ENV_NAME
+ARG ACCOUNT_ID
+ARG REGION
+ARG ENV_NAME
 
-#FROM $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/go-base-$ENV_NAME:latest as builder
-
-FROM public.ecr.aws/docker/library/golang:1.19.0-alpine3.16 as builder
+FROM $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/go-base-$ENV_NAME:latest as builder
 
 ARG CACHEBUST=1
 
