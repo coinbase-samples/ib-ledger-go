@@ -44,7 +44,7 @@ func NewPostgresHandler() *PostgresRepository {
 	pool, err := pgxpool.Connect(context.Background(), fmt.Sprintf("postgres://%s:%s@%s:%s/ledger", dbUsername, dbPassword, dbEndpoint, dbPort))
 
 	if err != nil {
-		log.Error("Failed to establish DB Pool")
+		log.Errorf("Failed to establish DB Pool: %v", err)
 	}
 
 	return &PostgresRepository{Pool: pool}
