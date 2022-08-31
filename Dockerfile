@@ -6,13 +6,6 @@ FROM $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/go-base-$ENV_NAME:latest as build
 
 ARG CACHEBUST=1
 
-RUN apk update && apk add --no-cache make protobuf-dev openssl
-
-RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
-RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
-
-ARG CACHEBUST=1
-
 RUN mkdir -p /build
 WORKDIR /build
 COPY . .
