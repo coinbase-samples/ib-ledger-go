@@ -27,7 +27,7 @@ func main() {
 
 	tlsCredentials, err := loadCredentials()
 	if err != nil {
-		log.Fatalln("Cannot load TLS credentials: ", err)
+		log.Fatalf("Cannot load TLS credentials: %v", err)
 	}
 
 	server := grpc.NewServer(
