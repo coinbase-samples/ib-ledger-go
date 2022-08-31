@@ -5,7 +5,8 @@ import (
 	"LedgerApp/utils"
 	"context"
 	"fmt"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -13,7 +14,7 @@ import (
 func (s *Service) CreateTransaction(ctx context.Context, req *api.CreateTransactionRequest) (*api.CreateTransactionResponse, error) {
 	result, err := s.PostgresHandler.CreateTransaction(ctx, req)
 	if err != nil {
-		log.Printf("unable to initialize account %v", err)
+		log.Errorf("unable to create transaction: %v", err)
 		return nil, err
 	}
 	response := &api.CreateTransactionResponse{
@@ -33,7 +34,7 @@ func (s *Service) CreateTransaction(ctx context.Context, req *api.CreateTransact
 func (s *Service) PartialReleaseHold(ctx context.Context, req *api.PartialReleaseHoldRequest) (*api.PartialReleaseHoldResponse, error) {
 	_, err := s.PostgresHandler.PartialReleaseHold(ctx, req)
 	if err != nil {
-		log.Printf("unable to partial release hold: %v", err)
+		log.Errorf("unable to partial release hold: %v", err)
 		return nil, err
 	}
 	response := &api.PartialReleaseHoldResponse{
@@ -47,19 +48,19 @@ func (s *Service) FinalizeTransaction(ctx context.Context, req *api.FinalizeTran
 	case api.TransactionStatus_COMPLETE:
 		_, err := s.PostgresHandler.CompleteTransaction(ctx, req)
 		if err != nil {
-			log.Printf("unable to complete transaction: %v", err)
+			log.Errorf("unable to complete transaction: %v", err)
 			return nil, err
 		}
 	case api.TransactionStatus_FAILED:
 		_, err := s.PostgresHandler.FailTransaction(ctx, req)
 		if err != nil {
-			log.Printf("unable to fail transaction: %v", err)
+			log.Errorf("unable to fail transaction: %v", err)
 			return nil, err
 		}
 	case api.TransactionStatus_CANCELED:
 		_, err := s.PostgresHandler.CancelTransaction(ctx, req)
 		if err != nil {
-			log.Printf("unable to cancel transaction: %v", err)
+			log.Errorf("unable to cancel transaction: %v", err)
 			return nil, err
 		}
 	default:

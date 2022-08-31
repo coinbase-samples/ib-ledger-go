@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 
 	api "LedgerApp/protos/ledger"
@@ -29,7 +30,7 @@ func NewPostgresHandler() *PostgresRepository {
 	json.Unmarshal([]byte(dbCredsString), &dbCredsJson)
 
 	dbUsername := dbCredsJson["username"].(string)
-	dbPassword := dbCredsJson["password"].(string)
+	dbPassword := url.QueryEscape(dbCredsJson["password"].(string))
 
 	dbEndpoint := os.Getenv("DB_HOSTNAME")
 	if dbEndpoint == "" {
@@ -44,7 +45,7 @@ func NewPostgresHandler() *PostgresRepository {
 	pool, err := pgxpool.Connect(context.Background(), fmt.Sprintf("postgres://%s:%s@%s:%s/ledger", dbUsername, dbPassword, dbEndpoint, dbPort))
 
 	if err != nil {
-		log.Errorf("Failed to establish DB Pool: %v", err)
+		log.Fatalf("Failed to establish DB Pool: %v", err)
 	}
 
 	return &PostgresRepository{Pool: pool}
