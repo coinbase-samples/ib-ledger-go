@@ -13,7 +13,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	ledgerClient := NewLedgerServiceClient("localhost:8080")
+	ledgerClient := NewLedgerServiceClient("localhost:8443")
 
 	transactionRes, err := ledgerClient.CreateTransaction(ctx, &ledger.CreateTransactionRequest{
 		OrderId:         "456B4BF7-D975-4AED-B0F0-33FC1666F69B",

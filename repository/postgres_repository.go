@@ -20,7 +20,7 @@ type PostgresRepository struct {
 	Pool *pgxpool.Pool
 }
 
-func NewPostgresHandler() *PostgresRepository {
+func NewPostgresHandler(env string) *PostgresRepository {
 	dbCredsString := os.Getenv("DB_CREDENTIALS")
 	if dbCredsString == "" {
 		log.Fatalf("no environment variable set for DB_CREDENTIALS")
@@ -42,7 +42,13 @@ func NewPostgresHandler() *PostgresRepository {
 		log.Fatalf("no environment variable set for DB_PORT")
 	}
 
-	pool, err := pgxpool.Connect(context.Background(), fmt.Sprintf("postgres://%s:%s@%s:%s/ledger", dbUsername, dbPassword, dbEndpoint, dbPort))
+	dbUrl := fmt.Sprintf("postgres://%s:%s@%s:%s/ledger", dbUsername, dbPassword, dbEndpoint, dbPort)
+
+	if env == "local" {
+		dbUrl += "?sslmode=disable"
+	}
+
+	pool, err := pgxpool.Connect(context.Background(), dbUrl)
 
 	if err != nil {
 		log.Fatalf("Failed to establish DB Pool: %v", err)

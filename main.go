@@ -4,42 +4,91 @@ import (
 	"LedgerApp/repository"
 	"LedgerApp/service"
 	"crypto/tls"
-	"flag"
 	"fmt"
-	"log"
 	"net"
+	"os"
+	"time"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
+	log "github.com/sirupsen/logrus"
+
 	api "LedgerApp/protos/ledger"
 )
 
 var (
-	port = flag.Int("port", 8443, "The server port")
+	//setup logrus for interceptor
+	logrusLogger = log.New()
 )
 
 func main() {
-	lis, _ := net.Listen("tcp", fmt.Sprintf(":%d", *port))
-	dba := repository.NewPostgresHandler()
-	service := service.NewService(dba)
 
-	tlsCredentials, err := loadCredentials()
+	//setup conn
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", "8443"))
 	if err != nil {
-		log.Fatalf("Cannot load TLS credentials: %v", err)
+		logrusLogger.Fatalln("Failed to listen for gRPC: %v", err)
 	}
 
-	server := grpc.NewServer(
-		grpc.Creds(tlsCredentials),
-	)
+	// Logrus entry is used, allowing pre-definition of certain fields by the user.
+	// See example setup here https://github.com/grpc-ecosystem/go-grpc-middleware/blob/master/logging/logrus/examples_test.go
+	logrusEntry := log.NewEntry(logrusLogger)
+	opts := []grpc_logrus.Option{
+		grpc_logrus.WithDurationField(func(duration time.Duration) (key string, value interface{}) {
+			return "grpc.time_ns", duration.Nanoseconds()
+		}),
+	}
+	grpc_logrus.ReplaceGrpcLogger(logrusEntry)
+
+	env := os.Getenv("ENV_NAME")
+	if env == "" {
+		log.Fatalf("no environment name set")
+	}
+
+	var server *grpc.Server
+	if env == "local" {
+		server = grpc.NewServer(
+			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+				grpc_ctxtags.UnaryServerInterceptor(),
+				grpc_logrus.UnaryServerInterceptor(logrusEntry, opts...),
+				grpc_validator.UnaryServerInterceptor(),
+				grpc_recovery.UnaryServerInterceptor(),
+			)),
+		)
+	} else {
+		// load tls for grpc
+		tlsCredentials, err := loadCredentials()
+		if err != nil {
+			logrusLogger.Fatalln("Cannot load TLS credentials: ", err)
+		}
+
+		server = grpc.NewServer(
+			grpc.Creds(tlsCredentials),
+			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+				grpc_ctxtags.UnaryServerInterceptor(),
+				grpc_logrus.UnaryServerInterceptor(logrusEntry, opts...),
+				grpc_validator.UnaryServerInterceptor(),
+				grpc_recovery.UnaryServerInterceptor(),
+			)),
+		)
+	}
 
 	//setup health server
 	healthServer := health.NewServer()
 	healthServer.SetServingStatus("grpc.health.v1.Health", grpc_health_v1.HealthCheckResponse_SERVING)
 	grpc_health_v1.RegisterHealthServer(server, healthServer)
+
+	// Setup application service
+	dba := repository.NewPostgresHandler(env)
+	service := service.NewService(dba)
 
 	api.RegisterLedgerServer(server, service)
 	reflection.Register(server)
