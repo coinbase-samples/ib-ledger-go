@@ -90,7 +90,6 @@ func main() {
 			grpc.Creds(tlsCredentials),
 			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 				grpc_ctxtags.UnaryServerInterceptor(),
-				grpc_logrus.UnaryServerInterceptor(logrusEntry, opts...),
 				grpc_validator.UnaryServerInterceptor(),
 				grpc_recovery.UnaryServerInterceptor(),
 			)),
