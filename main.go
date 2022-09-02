@@ -23,13 +23,7 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"time"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
-	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
-	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
@@ -56,13 +50,13 @@ func main() {
 
 	// Logrus entry is used, allowing pre-definition of certain fields by the user.
 	// See example setup here https://github.com/grpc-ecosystem/go-grpc-middleware/blob/master/logging/logrus/examples_test.go
-	logrusEntry := log.NewEntry(logrusLogger)
-	opts := []grpc_logrus.Option{
+	//logrusEntry := log.NewEntry(logrusLogger)
+	/*opts := []grpc_logrus.Option{
 		grpc_logrus.WithDurationField(func(duration time.Duration) (key string, value interface{}) {
 			return "grpc.time_ns", duration.Nanoseconds()
 		}),
-	}
-	grpc_logrus.ReplaceGrpcLogger(logrusEntry)
+	}*/
+	//grpc_logrus.ReplaceGrpcLogger(logrusEntry)
 
 	env := os.Getenv("ENV_NAME")
 	if env == "" {
@@ -71,14 +65,7 @@ func main() {
 
 	var server *grpc.Server
 	if env == "local" {
-		server = grpc.NewServer(
-			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-				grpc_ctxtags.UnaryServerInterceptor(),
-				grpc_logrus.UnaryServerInterceptor(logrusEntry, opts...),
-				grpc_validator.UnaryServerInterceptor(),
-				grpc_recovery.UnaryServerInterceptor(),
-			)),
-		)
+		server = grpc.NewServer()
 	} else {
 		// load tls for grpc
 		tlsCredentials, err := loadCredentials()
