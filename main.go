@@ -88,11 +88,6 @@ func main() {
 
 		server = grpc.NewServer(
 			grpc.Creds(tlsCredentials),
-			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-				grpc_ctxtags.UnaryServerInterceptor(),
-				grpc_validator.UnaryServerInterceptor(),
-				grpc_recovery.UnaryServerInterceptor(),
-			)),
 		)
 	}
 
