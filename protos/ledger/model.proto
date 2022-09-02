@@ -23,7 +23,7 @@ import "google/protobuf/timestamp.proto";
 
 message Account {
   string id = 1;
-  string portfolioId = 2;
+  optional string portfolioId = 2;
   string userId = 3;
   string currency = 4;
   google.protobuf.Timestamp created_at = 6;
@@ -35,6 +35,15 @@ message AccountBalance {
   string hold = 3;
   string available = 4;
   optional string account_id = 5;
+}
+
+message AccountAndBalance {
+  string accountId = 1;
+  string currency = 2;
+  string balance = 3;
+  string hold = 4;
+  string available = 5;
+  google.protobuf.Timestamp balanceAt = 6;
 }
 
 enum TransactionType {

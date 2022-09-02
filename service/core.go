@@ -31,10 +31,11 @@ func (s *Service) InitializeAccount(ctx context.Context, req *api.InitializeAcco
 		log.Printf("unable to initialize account %v", err)
 		return nil, err
 	}
+	portfolioId := result.PortfolioId.String()
 	response := &api.InitializeAccountResponse{
 		Account: &api.Account{
 			Id:          result.Id.String(),
-			PortfolioId: result.PortfolioId.String(),
+			PortfolioId: &portfolioId,
 			UserId:      result.UserId.String(),
 			Currency:    result.Currency,
 			CreatedAt:   timestamppb.New(result.CreatedAt),
@@ -53,7 +54,26 @@ func (s *Service) GetAccount(ctx context.Context, req *api.GetAccountRequest) (*
 }
 
 func (s *Service) GetAccounts(ctx context.Context, req *api.GetAccountsRequest) (*api.GetAccountsResponse, error) {
-	return nil, nil
+	results, err := s.PostgresHandler.GetAllAccountsAndMostRecentBalances(ctx, req.UserId)
+	if err != nil {
+		log.Printf("unable to get accounts and balances for user: %v", err)
+		return nil, err
+	}
+
+	var outputResults []*api.AccountAndBalance
+
+	for _, r := range results {
+		outputResults = append(outputResults, &api.AccountAndBalance{
+			AccountId: r.AccountId.String(),
+			Currency:  r.Currency,
+			Balance:   fmt.Sprint(r.Balance),
+			Hold:      fmt.Sprint(r.Hold),
+			Available: fmt.Sprint(r.Available),
+			BalanceAt: timestamppb.New(r.CreatedAt),
+		})
+	}
+
+	return &api.GetAccountsResponse{Accounts: outputResults}, nil
 }
 
 func (s *Service) GetBalance(ctx context.Context, req *api.GetBalanceRequest) (*api.GetBalanceResponse, error) {

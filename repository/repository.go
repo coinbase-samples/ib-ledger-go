@@ -29,4 +29,5 @@ type Repository interface {
 	CompleteTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error)
 	FailTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error)
 	CancelTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error)
+	GetAllAccountsAndMostRecentBalances(ctx context.Context, userId string) ([]*model.GetAccountResult, error)
 }

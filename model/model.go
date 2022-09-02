@@ -49,3 +49,12 @@ type TransactionResult struct {
 	SenderBalanceId   uuid.UUID `db:"sender_balance_id"`
 	ReceiverBalanceId uuid.UUID `db:"receiver_balance_id"`
 }
+
+type GetAccountResult struct {
+	AccountId uuid.UUID `db:"account_id"`
+	Currency  string    `db:"currency"`
+	Balance   int64     `db:"balance"`
+	Hold      int64     `db:"hold"`
+	Available int64     `db:"available"`
+	CreatedAt time.Time `db:"created_at"`
+}

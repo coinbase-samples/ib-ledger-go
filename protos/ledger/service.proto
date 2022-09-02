@@ -71,7 +71,7 @@ message GetAccountsRequest {
 }
 
 message GetAccountsResponse {
-  repeated Account accounts = 1;
+  repeated AccountAndBalance accounts = 1;
 }
 
 message GetBalanceRequest {
