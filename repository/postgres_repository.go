@@ -43,7 +43,11 @@ func NewPostgresHandler(env string) *PostgresRepository {
 	}
 
 	var dbCredsJson map[string]interface{}
-	json.Unmarshal([]byte(dbCredsString), &dbCredsJson)
+	err := json.Unmarshal([]byte(dbCredsString), &dbCredsJson)
+
+	if err != nil {
+		log.Fatalf("unable to unmarshal the cred string")
+	}
 
 	dbUsername := dbCredsJson["username"].(string)
 	dbPassword := url.QueryEscape(dbCredsJson["password"].(string))
@@ -64,6 +68,7 @@ func NewPostgresHandler(env string) *PostgresRepository {
 		dbUrl += "?sslmode=disable"
 	}
 
+	log.Printf("attempting to connect to database with username: %v, hostname: %v, and port %v", dbUsername, dbEndpoint, dbPort)
 	pool, err := pgxpool.Connect(context.Background(), dbUrl)
 
 	if err != nil {
