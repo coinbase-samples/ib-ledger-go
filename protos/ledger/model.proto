@@ -48,6 +48,8 @@ message AccountAndBalance {
 
 enum TransactionType {
   TRANSFER = 0;
+  ORDER = 1;
+  CONVERT = 2;
 }
 
 enum TransactionStatus {

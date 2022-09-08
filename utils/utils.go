@@ -16,22 +16,32 @@
 
 package utils
 
-import api "LedgerApp/protos/ledger"
+import (
+	api "LedgerApp/protos/ledger"
+)
 
-func GetTransactionTypeFromString(s string) api.TransactionType {
+func GetTransactionTypeFromString(s string) (api.TransactionType, bool) {
 	switch s {
 	case "TRANSFER":
-		return api.TransactionType_TRANSFER
+		return api.TransactionType_TRANSFER, true
+	case "ORDER":
+		return api.TransactionType_ORDER, true
+	case "CONVERT":
+		return api.TransactionType_CONVERT, true
 	default:
-		return api.TransactionType_TRANSFER
+		return api.TransactionType_TRANSFER, false
 	}
 }
 
-func GetStringFromTransactionType(t api.TransactionType) string {
+func GetStringFromTransactionType(t api.TransactionType) (string, bool) {
 	switch t {
 	case api.TransactionType_TRANSFER:
-		return "TRANSFER"
+		return "TRANSFER", true
+	case api.TransactionType_ORDER:
+		return "ORDER", true
+	case api.TransactionType_CONVERT:
+		return "CONVERT", true
 	default:
-		return "TRANSFER"
+		return "", false
 	}
 }

@@ -95,7 +95,12 @@ func (handler *PostgresRepository) CreateTransaction(ctx context.Context, reques
 
 	const sql = `SELECT id, sender_id, receiver_id, request_id, transaction_type, created_at FROM create_transaction_and_place_hold($1, $2, $3, $4, $5, $6)`
 
-	err := pgxscan.Select(context.Background(), handler.Pool, &createTransactionResult, sql, request.OrderId, request.SenderId, request.ReceiverId, request.RequestId, request.SenderAmount, utils.GetStringFromTransactionType(request.TransactionType))
+	transactionType, ok := utils.GetStringFromTransactionType(request.TransactionType)
+	if !ok {
+		return nil, fmt.Errorf("bad request: transaction type not supported: %v", transactionType)
+	}
+
+	err := pgxscan.Select(context.Background(), handler.Pool, &createTransactionResult, sql, request.OrderId, request.SenderId, request.ReceiverId, request.RequestId, request.SenderAmount, transactionType)
 	if err != nil {
 		return nil, err
 	}

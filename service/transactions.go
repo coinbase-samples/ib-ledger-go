@@ -33,13 +33,17 @@ func (s *Service) CreateTransaction(ctx context.Context, req *api.CreateTransact
 		log.Errorf("unable to create transaction: %v", err)
 		return nil, err
 	}
+	transactionType, ok := utils.GetTransactionTypeFromString(result.TransactionType)
+	if !ok {
+		return nil, fmt.Errorf("bad request: transaction type not supported: %v", result.TransactionType)
+	}
 	response := &api.CreateTransactionResponse{
 		Transaction: &api.Transaction{
 			Id:                result.Id.String(),
 			SenderId:          result.SenderId.String(),
 			ReceiverId:        result.ReceiverId.String(),
 			CreatedAt:         timestamppb.New(result.CreatedAt),
-			TransactionType:   utils.GetTransactionTypeFromString(result.TransactionType),
+			TransactionType:   transactionType,
 			RequestId:         result.RequestId.String(),
 			TransactionStatus: api.TransactionStatus_PENDING,
 		},
