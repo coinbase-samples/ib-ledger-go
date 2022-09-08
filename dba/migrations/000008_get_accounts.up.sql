@@ -32,10 +32,14 @@ AS
 $$
 BEGIN
     return QUERY
-        SELECT a.id, ab.balance, ab.hold, ab.available, ab.created_at FROM
-        (select id FROM account WHERE user_id = arg_user_id) a INNER JOIN
-        (SELECT account_id, MAX(count) FROM account_balance GROUP BY account_id) recent_balance
-        ON a.id = recent_balance.account_id INNER JOIN
-        account_balance ab ON recent_balance.account_id = ab.account_id AND recent_balance.count = ab.count;
+        SELECT acc.id, ab.balance, ab.hold, ab.available, ab.created_at FROM
+            (select id FROM account WHERE user_id = arg_user_id) acc
+            INNER JOIN
+            (SELECT account_id, MAX(count) FROM account_balance GROUP BY account_id) recent_balance
+            ON acc.id = recent_balance.account_id
+        INNER JOIN
+            account_balance ab
+        ON recent_balance.account_id = ab.account_id
+        WHERE recent_balance.count = ab.count;
 END
 $$;
