@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS account_balance
     available  NUMERIC          DEFAULT 0,
     created_at TIMESTAMPTZ(3)   DEFAULT NOW() NOT NULL,
     request_id   UUID,
-    count      NUMERIC          DEFAULT 0     NOT NULL
+    count      NUMERIC          DEFAULT 1     NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS transaction
