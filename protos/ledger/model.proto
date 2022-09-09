@@ -20,21 +20,22 @@ package ledger;
 option go_package="LedgerApp/protos/ledger";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
 
 message Account {
-  string id = 1;
-  optional string portfolioId = 2;
+  google.protobuf.StringValue id = 1;
+  google.protobuf.StringValue portfolioId = 2;
   string userId = 3;
   string currency = 4;
   google.protobuf.Timestamp created_at = 6;
 }
 
 message AccountBalance {
-  optional string id = 1;
+  google.protobuf.StringValue id = 1;
   string balance = 2;
   string hold = 3;
   string available = 4;
-  optional string account_id = 5;
+  google.protobuf.StringValue account_id = 5;
 }
 
 message AccountAndBalance {

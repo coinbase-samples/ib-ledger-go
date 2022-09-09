@@ -93,14 +93,25 @@ func (handler *PostgresRepository) InitializeAccount(ctx context.Context, reques
 func (handler *PostgresRepository) CreateTransaction(ctx context.Context, request *api.CreateTransactionRequest) (*model.CreateTransactionResult, error) {
 	var createTransactionResult []*model.CreateTransactionResult
 
-	const sql = `SELECT id, sender_id, receiver_id, request_id, transaction_type, created_at FROM create_transaction_and_place_hold($1, $2, $3, $4, $5, $6)`
+	const sql = `SELECT id, sender_id, receiver_id, request_id, transaction_type, created_at FROM create_transaction_and_place_hold($1, $2, $3, $4, $5, $6, $7, $8)`
 
 	transactionType, ok := utils.GetStringFromTransactionType(request.TransactionType)
 	if !ok {
 		return nil, fmt.Errorf("bad request: transaction type not supported: %v", transactionType)
 	}
 
-	err := pgxscan.Select(context.Background(), handler.Pool, &createTransactionResult, sql, request.OrderId, request.SenderId, request.ReceiverId, request.RequestId, request.SenderAmount, transactionType)
+	err := pgxscan.Select(context.Background(),
+		handler.Pool,
+		&createTransactionResult,
+		sql,
+		request.OrderId,
+		request.Sender.Currency,
+		request.Sender.UserId,
+		request.Receiver.Currency,
+		request.Receiver.UserId,
+		request.RequestId.Value,
+		request.TotalAmount,
+		transactionType)
 	if err != nil {
 		return nil, err
 	}

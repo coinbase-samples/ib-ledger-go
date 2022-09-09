@@ -24,6 +24,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func main() {
@@ -32,12 +33,18 @@ func main() {
 	ledgerClient := NewLedgerServiceClient("localhost:8443")
 
 	transactionRes, err := ledgerClient.CreateTransaction(ctx, &ledger.CreateTransactionRequest{
-		OrderId:         "456B4BF7-D975-4AED-B0F0-33FC1666F69B",
-		SenderId:        "B183F5E2-B72A-4AA5-B7AE-95E0D548D84D",
-		ReceiverId:      "9AA945E8-05FB-4D8E-88C9-1986F0813292",
-		SenderAmount:    "10",
+		OrderId: "456B4BF7-D975-4AED-B0F0-33FC1666F69B",
+		Sender: &ledger.Account{
+			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
+			Currency: "USD",
+		},
+		Receiver: &ledger.Account{
+			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
+			Currency: "ETH",
+		},
+		TotalAmount:     "10",
 		TransactionType: ledger.TransactionType_TRANSFER,
-		RequestId:       "33D81CC5-42AE-4BCE-86F5-915338A9FDFF",
+		RequestId:       &wrapperspb.StringValue{Value: "33D81CC5-42AE-4BCE-86F5-915338A9FDFF"},
 	})
 
 	if err != nil {

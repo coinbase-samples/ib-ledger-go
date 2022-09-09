@@ -23,6 +23,7 @@ import (
 	"log"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func (s *Service) InitializeAccount(ctx context.Context, req *api.InitializeAccountRequest) (*api.InitializeAccountResponse, error) {
@@ -31,11 +32,11 @@ func (s *Service) InitializeAccount(ctx context.Context, req *api.InitializeAcco
 		log.Printf("unable to initialize account %v", err)
 		return nil, err
 	}
-	portfolioId := result.PortfolioId.String()
+
 	response := &api.InitializeAccountResponse{
 		Account: &api.Account{
-			Id:          result.Id.String(),
-			PortfolioId: &portfolioId,
+			Id:          &wrapperspb.StringValue{Value: result.Id.String()},
+			PortfolioId: &wrapperspb.StringValue{Value: result.PortfolioId.String()},
 			UserId:      result.UserId.String(),
 			Currency:    result.Currency,
 			CreatedAt:   timestamppb.New(result.CreatedAt),

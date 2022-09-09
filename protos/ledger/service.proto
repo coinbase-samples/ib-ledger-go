@@ -21,6 +21,7 @@ package ledger;
 option go_package="LedgerApp/protos/ledger";
 
 import "protos/ledger/model.proto";
+import "google/protobuf/wrappers.proto";
 
 // Ledger API
 service Ledger {
@@ -75,7 +76,7 @@ message GetAccountsResponse {
 }
 
 message GetBalanceRequest {
-  optional string id = 1;
+  google.protobuf.StringValue id = 1;
 }
 
 message GetBalanceResponse {
@@ -92,11 +93,12 @@ message GetBalancesResponse {
 
 message CreateTransactionRequest {
   string orderId = 1;
-  string senderId = 2;
-  string receiverId = 3;
-  string senderAmount = 4;
-  TransactionType transactionType = 5;
-  string requestId = 6;
+  Account sender = 2;
+  Account receiver = 3;
+  string totalAmount = 4;
+  google.protobuf.StringValue feeAmount = 5;
+  TransactionType transactionType = 6;
+  google.protobuf.StringValue requestId = 7;
 }
 
 message CreateTransactionResponse {
@@ -112,18 +114,18 @@ message PartialReleaseHoldRequest {
 
 message PartialReleaseHoldResponse {
   bool successful = 1;
-  optional string failureMessage = 2;
+  google.protobuf.StringValue failureMessage = 2;
 }
 
 message FinalizeTransactionRequest {
   string orderId = 1;
   string requestId = 2;
   TransactionStatus finalizedStatus = 3;
-  optional string senderAmount = 4;
-  optional string receiverAmount = 5;
+  google.protobuf.StringValue senderAmount = 4;
+  google.protobuf.StringValue receiverAmount = 5;
 }
 
 message FinalizeTransactionResponse {
   bool successful = 1;
-  optional string failureMessage = 2;
+  google.protobuf.StringValue failureMessage = 2;
 }
