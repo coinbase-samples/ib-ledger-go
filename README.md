@@ -1,30 +1,32 @@
 ### Amplify Ledger
 
-This is the application code and SQL for the Amplify Ledger compute and database.
+This is the application code and SQL for the Amplify Ledger implementation.
 
 ### Local Environment Setup
 
-Environment Variables:
-DB_HOSTNAME="localhost"
-DB_PORT="5432"
-DB_CREDENTIALS="{\"password\":\"postgres\",\"username\":\"postgres\"}"
-ENV_NAME="local"
+Required Installations:
+* [Golang-Migrate](https://github.com/golang-migrate/migrate) - Migration library used to stand up the database
+```
+brew install golang-migrate
+```
+* [Docker](https://docs.docker.com/get-docker/) - Containers are used to run the Postgres Database locally. 
+Installation instructions unnecessary as you probably have this already installed. If not, follow the link and download Docker.
 
-To spin up the database:
+To spin up the container to run postgres:
 `docker-compose up -d`
 
 This will start up the database running at localhost:5432
 
-To insert the database configuration run the following command:
+To insert the database configuration and start the application layer run:
 
 ```
-go run cmd/dba/main.go -m <PATH TO MIGRATIONS FOLDER> migrate up
+make start-local
 ```
 
-This will create all of the tables and functions needed for the application.
+This will insert the table schema and test data
 
 To test the complete functionality, run the following command
 
 ```
-make run complete_test
+make complete_test
 ```

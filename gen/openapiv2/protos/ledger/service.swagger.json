@@ -115,6 +115,9 @@
       "properties": {
         "account": {
           "$ref": "#/definitions/ledgerAccount"
+        },
+        "accountBalance": {
+          "$ref": "#/definitions/ledgerAccountBalance"
         }
       }
     },

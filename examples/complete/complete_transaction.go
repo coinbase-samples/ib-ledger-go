@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	ledger "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
@@ -30,7 +31,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	ledgerClient := NewLedgerServiceClient("localhost:8443")
+	ledgerClient := NewLedgerServiceClient("localhost:8445")
 
 	transactionRes, err := ledgerClient.CreateTransaction(ctx, &ledger.CreateTransactionRequest{
 		OrderId: "456B4BF7-D975-4AED-B0F0-33FC1666F69B",
@@ -42,7 +43,8 @@ func main() {
 			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
 			Currency: "ETH",
 		},
-		TotalAmount:     "10",
+		TotalAmount:     "1000",
+		FeeAmount:       &wrapperspb.StringValue{Value: "5"},
 		TransactionType: ledger.TransactionType_TRANSFER,
 		RequestId:       &wrapperspb.StringValue{Value: "33D81CC5-42AE-4BCE-86F5-915338A9FDFF"},
 	})
@@ -52,11 +54,26 @@ func main() {
 		log.Fatalf("unable to create transaction")
 	}
 
+	output, err := ledgerClient.GetAccounts(ctx, &ledger.GetAccountsRequest{
+		UserId: "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
+	})
+
+	if err != nil {
+		log.Print(err)
+		log.Fatalf("unable to get accounts")
+	}
+
+	for _, a := range output.Accounts {
+		fmt.Println(fmt.Sprintf("accountId: %s - currency: %s - balance: %s, hold: %s, available: %s", a.AccountId, a.Currency, a.Balance, a.Hold, a.Available))
+	}
+
 	_, err = ledgerClient.PartialReleaseHold(ctx, &ledger.PartialReleaseHoldRequest{
-		OrderId:        transactionRes.Transaction.Id,
-		RequestId:      "11A40B5B-74AA-4CBD-A04B-AADC4F0487E8",
-		SenderAmount:   "1",
-		ReceiverAmount: "10",
+		OrderId:         transactionRes.Transaction.Id,
+		RequestId:       "11A40B5B-74AA-4CBD-A04B-AADC4F0487E8",
+		SenderAmount:    "1",
+		ReceiverAmount:  "10",
+		VenueFeeAmount:  &wrapperspb.StringValue{Value: "1"},
+		RetailFeeAmount: &wrapperspb.StringValue{Value: "1"},
 	})
 
 	if err != nil {
@@ -68,11 +85,28 @@ func main() {
 		OrderId:         transactionRes.Transaction.Id,
 		RequestId:       "E2586CC8-2879-48B2-83E2-F1F5CF87E248",
 		FinalizedStatus: ledger.TransactionStatus_COMPLETE,
+		SenderAmount:    &wrapperspb.StringValue{Value: "999"},
+		ReceiverAmount:  &wrapperspb.StringValue{Value: "56"},
+		VenueFeeAmount:  &wrapperspb.StringValue{Value: "1"},
+		RetailFeeAmount: &wrapperspb.StringValue{Value: "2"},
 	})
 
 	if err != nil {
 		log.Print(err)
 		log.Fatalf("unable to complete transaction")
+	}
+
+	output, err = ledgerClient.GetAccounts(ctx, &ledger.GetAccountsRequest{
+		UserId: "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
+	})
+
+	if err != nil {
+		log.Print(err)
+		log.Fatalf("unable to get accounts")
+	}
+
+	for _, a := range output.Accounts {
+		fmt.Println(fmt.Sprintf("accountId: %s - currency: %s - balance: %s, hold: %s, available: %s", a.AccountId, a.Currency, a.Balance, a.Hold, a.Available))
 	}
 }
 

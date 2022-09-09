@@ -14,122 +14,122 @@
  * limitations under the License.
  */
 
-INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('B183F5E2-B72A-4AA5-B7AE-95E0D548D84D', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        '620E62FD-DAF1-4738-84CE-1DBC4393ED29', 'USD', now());
-
-INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('B183F5E2-B72A-4AA5-B7AE-95E0D548D84D', 1000, 0, 1000, now(), null, 1);
-
-INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('9AA945E8-05FB-4D8E-88C9-1986F0813292', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        '620E62FD-DAF1-4738-84CE-1DBC4393ED29', 'ETH', now());
-
-INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('9AA945E8-05FB-4D8E-88C9-1986F0813292', 1000, 0, 1000, now(), null, 1);
+/*
+ * Neoworks Fee Accounts
+*/
+INSERT INTO account(id, portfolio_id, user_id, currency, created_at)
+VALUES ('B72D0E55-F53A-4DB0-897E-2CE4A73CB94B', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        '116BDE43-7733-43A1-A85A-FC8627E6DA8E', 'USD', now());
 
 /*
-Carl's User
+ * Coinbase Fee Accounts
 */
-INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('266f4811-8906-4292-8e8a-ce18ebe33d1b', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        'c7e34d37-f678-4096-94f7-3cad7d3258b9', 'USD', now());
-
-INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('266f4811-8906-4292-8e8a-ce18ebe33d1b', 10000000, 0, 10000000, now(), null, 1);
-
-INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('100a4079-3237-4302-8bd5-44b5425d0823', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        'c7e34d37-f678-4096-94f7-3cad7d3258b9', 'ETH', now());
-
-INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('100a4079-3237-4302-8bd5-44b5425d0823', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
-
-INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('cc367c26-c192-437c-8fa3-43ce39ca32ef', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        'c7e34d37-f678-4096-94f7-3cad7d3258b9', 'SOL', now());
-
-INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('cc367c26-c192-437c-8fa3-43ce39ca32ef', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
-
-INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('04ca5482-9f3a-42df-b70d-78ae13cec589', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        'c7e34d37-f678-4096-94f7-3cad7d3258b9', 'BTC', now());
-
-INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('04ca5482-9f3a-42df-b70d-78ae13cec589', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
-
-INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('997e24a9-4377-4df4-9315-30f99ecfa269', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        'c7e34d37-f678-4096-94f7-3cad7d3258b9', 'ADA', now());
-
-INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('997e24a9-4377-4df4-9315-30f99ecfa269', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
-
-INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('6d8f8af0-5e06-48f1-9ff6-ad3d95dc6837', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        'c7e34d37-f678-4096-94f7-3cad7d3258b9', 'MATIC', now());
-
-INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('6d8f8af0-5e06-48f1-9ff6-ad3d95dc6837', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
-
-INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('502ff8be-99ce-494a-9e27-54bbf2a37fd6', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        'c7e34d37-f678-4096-94f7-3cad7d3258b9', 'ATOM', now());
-
-INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('502ff8be-99ce-494a-9e27-54bbf2a37fd6', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
-
+INSERT INTO account(id, portfolio_id, user_id, currency, created_at)
+VALUES ('C4D0E14E-1B2B-4023-AFA6-8891AD1960C9', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        '433C0C15-0A44-49C4-A207-4501BB11F48C', 'USD', now());
 
 /*
-Jay's Test Account - 4f5a6336-8101-4634-a458-73b7f6fcf49f
-*/
+ * Demo Accounts
+ */
 
 INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('61e3221e-9434-448f-9cd3-73d32f42a647', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        '4f5a6336-8101-4634-a458-73b7f6fcf49f', 'USD', now());
+VALUES ('0adbb104-fc18-46ca-a4eb-beee7775eb69', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        'c5af3271-7185-4a52-9d0c-1c4b418317d8', 'USD', now());
 
 INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('61e3221e-9434-448f-9cd3-73d32f42a647', 10000000, 0, 10000000, now(), null, 1);
+VALUES ('0adbb104-fc18-46ca-a4eb-beee7775eb69', 10000000, 0, 10000000, now(), null, 1);
 
 INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('c71f9a2f-2522-4ec1-bc68-bc697fcd7b17', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        '4f5a6336-8101-4634-a458-73b7f6fcf49f', 'ETH', now());
+VALUES ('0e4f9af4-4972-4e09-aee4-69b96db0c129', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        'c5af3271-7185-4a52-9d0c-1c4b418317d8', 'ETH', now());
 
 INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('c71f9a2f-2522-4ec1-bc68-bc697fcd7b17', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
+VALUES ('0e4f9af4-4972-4e09-aee4-69b96db0c129', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
 
 INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('1934cfb7-90a4-4e84-a615-f91db1c757ba', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        '4f5a6336-8101-4634-a458-73b7f6fcf49f', 'SOL', now());
+VALUES ('084b5346-3214-419b-b7ec-e9c26a32e7c9', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        'c5af3271-7185-4a52-9d0c-1c4b418317d8', 'SOL', now());
 
 INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('1934cfb7-90a4-4e84-a615-f91db1c757ba', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
+VALUES ('084b5346-3214-419b-b7ec-e9c26a32e7c9', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
 
 INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('8b75d9cb-756f-4e12-a342-7a2b512126af', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        '4f5a6336-8101-4634-a458-73b7f6fcf49f', 'BTC', now());
+VALUES ('55886255-6035-44ca-b531-a738670aa133', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        'c5af3271-7185-4a52-9d0c-1c4b418317d8', 'BTC', now());
 
 INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('8b75d9cb-756f-4e12-a342-7a2b512126af', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
+VALUES ('55886255-6035-44ca-b531-a738670aa133', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
 
 INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('6eb0d347-2dd9-45aa-8da2-fca26467eef9', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        '4f5a6336-8101-4634-a458-73b7f6fcf49f', 'ADA', now());
+VALUES ('3a8450a7-6f5c-4972-82f6-3b4af620a1d6', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        'c5af3271-7185-4a52-9d0c-1c4b418317d8', 'ADA', now());
 
 INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('6eb0d347-2dd9-45aa-8da2-fca26467eef9', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
+VALUES ('3a8450a7-6f5c-4972-82f6-3b4af620a1d6', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
 
 INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('744b8753-ed2b-4a9a-8d7e-6e6c4e89de8c', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        '4f5a6336-8101-4634-a458-73b7f6fcf49f', 'MATIC', now());
+VALUES ('a32ea75d-38d7-42b5-84c5-0a00db2d8b1d', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        'c5af3271-7185-4a52-9d0c-1c4b418317d8', 'MATIC', now());
 
 INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('744b8753-ed2b-4a9a-8d7e-6e6c4e89de8c', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
+VALUES ('a32ea75d-38d7-42b5-84c5-0a00db2d8b1d', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
 
 INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
-VALUES ('2660a259-8c5a-406d-9ca2-e1466f3ab2e4', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        '4f5a6336-8101-4634-a458-73b7f6fcf49f', 'ATOM', now());
+VALUES ('8b1a6d8a-44b8-4dee-8e53-6a69fa182f39', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        'c5af3271-7185-4a52-9d0c-1c4b418317d8', 'ATOM', now());
 
 INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
-VALUES ('2660a259-8c5a-406d-9ca2-e1466f3ab2e4', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
+VALUES ('8b1a6d8a-44b8-4dee-8e53-6a69fa182f39', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
+
+/*
+ * Demo1 Accounts
+ */
+
+INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
+VALUES ('8e2ee8eb-2057-4996-8d32-9eef6a6ab824', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        '36ae23e7-d79e-4901-89d5-3fa87cca1abf', 'USD', now());
+
+INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
+VALUES ('8e2ee8eb-2057-4996-8d32-9eef6a6ab824', 10000000, 0, 10000000, now(), null, 1);
+
+INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
+VALUES ('55bd611c-cc12-45b5-8596-53c3f18e176d', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        '36ae23e7-d79e-4901-89d5-3fa87cca1abf', 'ETH', now());
+
+INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
+VALUES ('55bd611c-cc12-45b5-8596-53c3f18e176d', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
+
+INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
+VALUES ('f950c105-8555-466c-9383-cc35bedc9b0f', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        '36ae23e7-d79e-4901-89d5-3fa87cca1abf', 'SOL', now());
+
+INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
+VALUES ('f950c105-8555-466c-9383-cc35bedc9b0f', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
+
+INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
+VALUES ('653e3e55-5299-4539-aee4-98f6507e26c3', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        '36ae23e7-d79e-4901-89d5-3fa87cca1abf', 'BTC', now());
+
+INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
+VALUES ('653e3e55-5299-4539-aee4-98f6507e26c3', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
+
+INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
+VALUES ('9d4df5d5-8b83-4142-95bf-4c9487e93eec', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        '36ae23e7-d79e-4901-89d5-3fa87cca1abf', 'ADA', now());
+
+INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
+VALUES ('9d4df5d5-8b83-4142-95bf-4c9487e93eec', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
+
+INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
+VALUES ('f655baa0-c103-41a6-a7af-d02446dd1f2c', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        '36ae23e7-d79e-4901-89d5-3fa87cca1abf', 'MATIC', now());
+
+INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
+VALUES ('f655baa0-c103-41a6-a7af-d02446dd1f2c', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);
+
+INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
+VALUES ('acc5b856-8571-49c7-abbb-99c794f469a3', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
+        '36ae23e7-d79e-4901-89d5-3fa87cca1abf', 'ATOM', now());
+
+INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
+VALUES ('acc5b856-8571-49c7-abbb-99c794f469a3', 15000000000000000000, 0, 15000000000000000000, now(), null, 1);

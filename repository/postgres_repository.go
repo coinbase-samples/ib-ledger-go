@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strconv"
 
 	"github.com/coinbase-samples/ib-ledger-go/config"
 	"github.com/coinbase-samples/ib-ledger-go/model"
@@ -100,6 +101,12 @@ func (handler *PostgresRepository) CreateTransaction(ctx context.Context, reques
 		return nil, fmt.Errorf("bad request: transaction type not supported: %v", transactionType)
 	}
 
+	totalAmountInt, _ := strconv.ParseInt(request.TotalAmount, 10, 64)
+	if request.FeeAmount != nil {
+		feeAmountInt, _ := strconv.ParseInt(request.FeeAmount.Value, 10, 64)
+		totalAmountInt += feeAmountInt
+	}
+
 	err := pgxscan.Select(context.Background(),
 		handler.Pool,
 		&createTransactionResult,
@@ -110,7 +117,7 @@ func (handler *PostgresRepository) CreateTransaction(ctx context.Context, reques
 		request.Receiver.Currency,
 		request.Receiver.UserId,
 		request.RequestId.Value,
-		request.TotalAmount,
+		totalAmountInt,
 		transactionType)
 	if err != nil {
 		return nil, err
@@ -122,9 +129,37 @@ func (handler *PostgresRepository) CreateTransaction(ctx context.Context, reques
 func (handler *PostgresRepository) PartialReleaseHold(ctx context.Context, request *api.PartialReleaseHoldRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
 
-	const sql = `SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id FROM partial_release_hold($1, $2, $3, $4)`
+	const sql = `SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id FROM partial_release_hold($1, $2, $3, $4, $5, $6, $7, $8)`
 
-	err := pgxscan.Select(context.Background(), handler.Pool, &TransactionResult, sql, request.OrderId, request.RequestId, request.SenderAmount, request.ReceiverAmount)
+	var retailFeeAmount int64
+	if request.RetailFeeAmount == nil {
+		retailFeeAmount = 0
+	} else {
+		retailFeeAmount, _ = strconv.ParseInt(request.RetailFeeAmount.Value, 10, 64)
+	}
+
+	var venueFeeAmount int64
+	if request.VenueFeeAmount == nil {
+		venueFeeAmount = 0
+	} else {
+		venueFeeAmount, _ = strconv.ParseInt(request.VenueFeeAmount.Value, 10, 64)
+	}
+
+	retailAccountId, venueAccountId := utils.GetFeeAccounts("USD")
+
+	err := pgxscan.Select(
+		context.Background(),
+		handler.Pool,
+		&TransactionResult,
+		sql,
+		request.OrderId,
+		request.RequestId,
+		request.SenderAmount,
+		request.ReceiverAmount,
+		retailFeeAmount,
+		retailAccountId,
+		venueFeeAmount,
+		venueAccountId)
 	if err != nil {
 		return nil, err
 	}
@@ -135,9 +170,36 @@ func (handler *PostgresRepository) PartialReleaseHold(ctx context.Context, reque
 func (handler *PostgresRepository) CompleteTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
 
-	const sql = `SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id FROM complete_transaction($1, $2, $3)`
+	const sql = `SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id FROM complete_transaction($1, $2, $3, $4, $5, $6, $7)`
 
-	err := pgxscan.Select(context.Background(), handler.Pool, &TransactionResult, sql, request.OrderId, request.RequestId, request.ReceiverAmount)
+	var retailFeeAmount int64
+	if request.RetailFeeAmount == nil {
+		retailFeeAmount = 0
+	} else {
+		retailFeeAmount, _ = strconv.ParseInt(request.RetailFeeAmount.Value, 10, 64)
+	}
+
+	var venueFeeAmount int64
+	if request.VenueFeeAmount == nil {
+		venueFeeAmount = 0
+	} else {
+		venueFeeAmount, _ = strconv.ParseInt(request.VenueFeeAmount.Value, 10, 64)
+	}
+
+	retailAccountId, venueAccountId := utils.GetFeeAccounts("USD")
+
+	err := pgxscan.Select(
+		context.Background(),
+		handler.Pool,
+		&TransactionResult,
+		sql,
+		request.OrderId,
+		request.RequestId,
+		request.ReceiverAmount.Value,
+		retailFeeAmount,
+		retailAccountId,
+		venueFeeAmount,
+		venueAccountId)
 	if err != nil {
 		return nil, err
 	}

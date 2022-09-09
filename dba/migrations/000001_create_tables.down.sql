@@ -19,8 +19,8 @@ DROP TABLE finalized_transaction;
 DROP TABLE released_hold;
 DROP TABLE hold;
 DROP TABLE transaction;
-DROP TABLE account;
 DROP TABLE account_balance;
+DROP TABLE account;
 DROP TYPE direction;
 DROP TYPE ttype;
 

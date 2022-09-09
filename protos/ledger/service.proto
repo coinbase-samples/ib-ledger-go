@@ -59,11 +59,13 @@ message InitializeAccountResponse {
 }
 
 message GetAccountRequest {
-  string id = 1;
+  string userId = 1;
+  string currency = 2;
 }
 
 message GetAccountResponse {
   Account account = 1;
+  AccountBalance accountBalance = 2;
 }
 
 message GetAccountsRequest {
@@ -109,6 +111,8 @@ message PartialReleaseHoldRequest {
   string requestId = 2;
   string senderAmount = 3;
   string receiverAmount = 4;
+  google.protobuf.StringValue venueFeeAmount = 6;
+  google.protobuf.StringValue retailFeeAmount = 7;
 }
 
 message PartialReleaseHoldResponse {
@@ -122,6 +126,8 @@ message FinalizeTransactionRequest {
   TransactionStatus finalizedStatus = 3;
   google.protobuf.StringValue senderAmount = 4;
   google.protobuf.StringValue receiverAmount = 5;
+  google.protobuf.StringValue venueFeeAmount = 6;
+  google.protobuf.StringValue retailFeeAmount = 7;
 }
 
 message FinalizeTransactionResponse {

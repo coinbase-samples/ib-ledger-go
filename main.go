@@ -61,8 +61,9 @@ func main() {
 	//setup otel
 	tp, err := config.Init(app)
 
-	logLevel, _ := log.ParseLevel(app.LogLevel)
-	logrusLogger.SetLevel(logLevel)
+	if err != nil {
+		logrusLogger.Fatalln("Failed to configure env variables: %v", err)
+	}
 
 	defer func() {
 		if err := tp.Shutdown(context.Background()); err != nil {
@@ -87,7 +88,7 @@ func main() {
 	grpc_logrus.ReplaceGrpcLogger(logrusEntry)
 
 	if app.Env == "" {
-		log.Fatalf("no environment name set")
+		logrusLogger.Fatalln("no environment name set")
 	}
 
 	var server *grpc.Server
@@ -135,7 +136,7 @@ func main() {
 	reflection.Register(server)
 	log.Printf("server listening at %v", lis.Addr())
 	if err := server.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		logrusLogger.Fatalln("failed to serve: %v", err)
 	}
 }
 

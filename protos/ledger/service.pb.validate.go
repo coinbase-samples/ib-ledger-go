@@ -531,7 +531,9 @@ func (m *GetAccountRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Id
+	// no validation rules for UserId
+
+	// no validation rules for Currency
 
 	if len(errors) > 0 {
 		return GetAccountRequestMultiError(errors)
@@ -658,6 +660,35 @@ func (m *GetAccountResponse) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return GetAccountResponseValidationError{
 				field:  "Account",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetAccountBalance()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetAccountResponseValidationError{
+					field:  "AccountBalance",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetAccountResponseValidationError{
+					field:  "AccountBalance",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAccountBalance()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetAccountResponseValidationError{
+				field:  "AccountBalance",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -1871,6 +1902,64 @@ func (m *PartialReleaseHoldRequest) validate(all bool) error {
 
 	// no validation rules for ReceiverAmount
 
+	if all {
+		switch v := interface{}(m.GetVenueFeeAmount()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, PartialReleaseHoldRequestValidationError{
+					field:  "VenueFeeAmount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, PartialReleaseHoldRequestValidationError{
+					field:  "VenueFeeAmount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetVenueFeeAmount()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return PartialReleaseHoldRequestValidationError{
+				field:  "VenueFeeAmount",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetRetailFeeAmount()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, PartialReleaseHoldRequestValidationError{
+					field:  "RetailFeeAmount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, PartialReleaseHoldRequestValidationError{
+					field:  "RetailFeeAmount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetRetailFeeAmount()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return PartialReleaseHoldRequestValidationError{
+				field:  "RetailFeeAmount",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return PartialReleaseHoldRequestMultiError(errors)
 	}
@@ -2164,6 +2253,64 @@ func (m *FinalizeTransactionRequest) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return FinalizeTransactionRequestValidationError{
 				field:  "ReceiverAmount",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetVenueFeeAmount()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FinalizeTransactionRequestValidationError{
+					field:  "VenueFeeAmount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FinalizeTransactionRequestValidationError{
+					field:  "VenueFeeAmount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetVenueFeeAmount()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FinalizeTransactionRequestValidationError{
+				field:  "VenueFeeAmount",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetRetailFeeAmount()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FinalizeTransactionRequestValidationError{
+					field:  "RetailFeeAmount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FinalizeTransactionRequestValidationError{
+					field:  "RetailFeeAmount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetRetailFeeAmount()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FinalizeTransactionRequestValidationError{
+				field:  "RetailFeeAmount",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}

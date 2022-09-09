@@ -70,7 +70,7 @@ BEGIN
         )
     INTO sender_most_recent_balance;
 
-    temp_hold_amount = sender_most_recent_balance - temp_hold.amount;
+    temp_hold_amount = sender_most_recent_balance.hold - temp_hold.amount;
 
     INSERT INTO account_balance(account_id, request_id, balance, hold, available)
     VALUES (temp_transaction.sender_id, arg_request_id, sender_most_recent_balance.balance, temp_hold_amount,
@@ -145,7 +145,7 @@ BEGIN
         )
     INTO sender_most_recent_balance;
 
-    temp_hold_amount = sender_most_recent_balance - temp_hold.amount;
+    temp_hold_amount = sender_most_recent_balance.hold - temp_hold.amount;
 
     INSERT INTO account_balance(account_id, request_id, balance, hold, available)
     VALUES (temp_transaction.sender_id, arg_request_id, sender_most_recent_balance.balance, temp_hold_amount,
