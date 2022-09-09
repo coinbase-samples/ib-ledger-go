@@ -10,5 +10,5 @@
 go.work
 main
 
-.envrc
+.env*
 LedgerApp
