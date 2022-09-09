@@ -40,6 +40,6 @@ BEGIN
         INNER JOIN
             account_balance ab
         ON recent_balance.account_id = ab.account_id
-        WHERE recent_balance.count = ab.count;
+        HAVING recent_balance.count = ab.count;
 END
 $$;
