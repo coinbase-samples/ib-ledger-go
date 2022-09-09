@@ -16,11 +16,12 @@
 
 syntax = "proto3";
 
-package ledger;
-option go_package="LedgerApp/protos/ledger";
+package protos.ledger;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
+
+option go_package = "github.com/coinbase-samples/ib-ledger-go/protos/ledger";
 
 message Account {
   google.protobuf.StringValue id = 1;

@@ -17,7 +17,7 @@
 package utils
 
 import (
-	api "LedgerApp/protos/ledger"
+	api "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
 )
 
 func GetTransactionTypeFromString(s string) (api.TransactionType, bool) {

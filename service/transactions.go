@@ -17,10 +17,11 @@
 package service
 
 import (
-	api "LedgerApp/protos/ledger"
-	"LedgerApp/utils"
 	"context"
 	"fmt"
+
+	api "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
+	"github.com/coinbase-samples/ib-ledger-go/utils"
 
 	log "github.com/sirupsen/logrus"
 

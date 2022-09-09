@@ -17,9 +17,10 @@
 package repository
 
 import (
-	"LedgerApp/model"
-	api "LedgerApp/protos/ledger"
 	"context"
+
+	"github.com/coinbase-samples/ib-ledger-go/model"
+	api "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
 )
 
 type Repository interface {

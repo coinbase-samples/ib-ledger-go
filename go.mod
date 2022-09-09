@@ -1,4 +1,4 @@
-module LedgerApp
+module github.com/coinbase-samples/ib-ledger-go
 
 go 1.18
 

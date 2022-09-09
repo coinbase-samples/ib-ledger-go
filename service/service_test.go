@@ -17,10 +17,11 @@
 package service
 
 import (
-	"LedgerApp/model"
 	"context"
 
-	api "LedgerApp/protos/ledger"
+	"github.com/coinbase-samples/ib-ledger-go/model"
+
+	api "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
 )
 
 type TestPostgres struct {

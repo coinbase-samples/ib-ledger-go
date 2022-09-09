@@ -17,12 +17,13 @@
 package main
 
 import (
-	"LedgerApp/repository"
-	"LedgerApp/service"
 	"crypto/tls"
 	"fmt"
 	"net"
 	"os"
+
+	"github.com/coinbase-samples/ib-ledger-go/repository"
+	"github.com/coinbase-samples/ib-ledger-go/service"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -32,7 +33,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	api "LedgerApp/protos/ledger"
+	api "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
 )
 
 var (

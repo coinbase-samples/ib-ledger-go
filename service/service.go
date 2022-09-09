@@ -17,8 +17,8 @@
 package service
 
 import (
-	api "LedgerApp/protos/ledger"
-	"LedgerApp/repository"
+	api "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
+	"github.com/coinbase-samples/ib-ledger-go/repository"
 )
 
 type Service struct {

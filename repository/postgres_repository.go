@@ -17,15 +17,16 @@
 package repository
 
 import (
-	"LedgerApp/model"
-	"LedgerApp/utils"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
 	"os"
 
-	api "LedgerApp/protos/ledger"
+	"github.com/coinbase-samples/ib-ledger-go/model"
+	"github.com/coinbase-samples/ib-ledger-go/utils"
+
+	api "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
 
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgx/v4/pgxpool"

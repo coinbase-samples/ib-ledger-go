@@ -17,10 +17,11 @@
 package service
 
 import (
-	api "LedgerApp/protos/ledger"
 	"context"
 	"fmt"
 	"log"
+
+	api "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"

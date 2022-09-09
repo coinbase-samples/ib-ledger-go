@@ -16,12 +16,12 @@
 
 syntax = "proto3";
 
-package ledger;
+package protos.ledger;
 
-option go_package="LedgerApp/protos/ledger";
-
-import "protos/ledger/model.proto";
 import "google/protobuf/wrappers.proto";
+import "protos/ledger/model.proto";
+
+option go_package = "github.com/coinbase-samples/ib-ledger-go/protos/ledger";
 
 // Ledger API
 service Ledger {
@@ -36,8 +36,7 @@ service Ledger {
   rpc FinalizeTransaction(FinalizeTransactionRequest) returns (FinalizeTransactionResponse) {}
 }
 
-message HealthCheckRequest {
-}
+message HealthCheckRequest {}
 
 message HealthCheckResponse {
   enum ServingStatus {

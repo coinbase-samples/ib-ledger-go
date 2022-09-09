@@ -20,7 +20,7 @@ import (
 	"context"
 	"log"
 
-	ledger "LedgerApp/protos/ledger"
+	ledger "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
