@@ -8,6 +8,7 @@ Environment Variables:
 DB_HOSTNAME="localhost"
 DB_PORT="5432"
 DB_CREDENTIALS="{\"password\":\"postgres\",\"username\":\"postgres\"}"
+ENV_NAME="local"
 
 To spin up the database:
 `docker-compose up -d`
