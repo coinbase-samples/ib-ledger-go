@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS account
 CREATE TABLE IF NOT EXISTS account_balance
 (
     id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    account_id UUID                           NOT NULL,
+    account_id UUID                           NOT NULL REFERENCES account(id),
     balance    NUMERIC          DEFAULT 0,
     hold       NUMERIC          DEFAULT 0,
     available  NUMERIC          DEFAULT 0,
@@ -43,8 +43,8 @@ CREATE TABLE IF NOT EXISTS account_balance
 CREATE TABLE IF NOT EXISTS transaction
 (
     id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    sender_id        UUID  NOT NULL,
-    receiver_id      UUID  NOT NULL,
+    sender_id        UUID  NOT NULL REFERENCES account(id),
+    receiver_id      UUID  NOT NULL REFERENCES account(id),
     request_id         UUID  NOT NULL,
     transaction_type TTYPE NOT NULL,
     created_at       TIMESTAMPTZ(3)   DEFAULT NOW()
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS transaction
 
 CREATE TABLE IF NOT EXISTS finalized_transaction
 (
-    transaction_id UUID PRIMARY KEY,
+    transaction_id UUID PRIMARY KEY REFERENCES transaction(id),
     completed_at   TIMESTAMPTZ(3),
     canceled_at    TIMESTAMPTZ(3),
     failed_at      TIMESTAMPTZ(3),
@@ -62,8 +62,8 @@ CREATE TABLE IF NOT EXISTS finalized_transaction
 CREATE TABLE IF NOT EXISTS entry
 (
     id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    account_id     UUID,
-    transaction_id UUID                           NOT NULL,
+    account_id     UUID NOT NULL REFERENCES account(id),
+    transaction_id UUID                           NOT NULL REFERENCES transaction(id),
     request_id       UUID                           NOT NULL,
     amount         NUMERIC,
     direction      DIRECTION                      NOT NULL,
@@ -73,8 +73,8 @@ CREATE TABLE IF NOT EXISTS entry
 CREATE TABLE IF NOT EXISTS hold
 (
     id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    account_id     UUID                           NOT NULL,
-    transaction_id UUID                           NOT NULL,
+    account_id     UUID                           NOT NULL REFERENCES account(id),
+    transaction_id UUID                           NOT NULL REFERENCES transaction(id),
     request_id       UUID                           NOT NULL,
     amount         NUMERIC,
     created_at     TIMESTAMPTZ(3)   DEFAULT NOW() NOT NULL
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS hold
 
 CREATE TABLE IF NOT EXISTS released_hold
 (
-    hold_id     UUID PRIMARY KEY,
+    hold_id     UUID PRIMARY KEY REFERENCES hold(id),
     released_at TIMESTAMPTZ(3) DEFAULT NOW() NOT NULL,
     request_id    UUID                         NOT NULL
 );

@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/georgysavva/scany v1.1.0
 	github.com/google/uuid v1.3.0
-	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/jackc/pgx/v4 v4.10.1
 	github.com/sirupsen/logrus v1.8.1
 	google.golang.org/grpc v1.48.0
