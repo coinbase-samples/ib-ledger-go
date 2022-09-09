@@ -14,5 +14,7 @@
  * limitations under the License.
  */
 
-DELETE FROM account_balance;
-DELETE FROM account;
+DELETE
+FROM account_balance;
+DELETE
+FROM account;

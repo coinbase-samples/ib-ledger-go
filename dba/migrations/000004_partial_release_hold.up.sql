@@ -90,7 +90,8 @@ BEGIN
         temp_balance_amount = temp_balance_amount + arg_amount;
     end if;
     INSERT INTO account_balance (account_id, request_id, balance, hold, available, count)
-    VALUES (arg_account_id, arg_request_id, temp_balance_amount, temp_hold_amount, temp_balance_amount - temp_hold_amount,
+    VALUES (arg_account_id, arg_request_id, temp_balance_amount, temp_hold_amount,
+            temp_balance_amount - temp_hold_amount,
             temp_balance.count + 1)
     RETURNING * INTO temp_balance;
     result.balance_id = temp_balance.id;
@@ -159,14 +160,16 @@ BEGIN
 
     --Insert Sender Entry and Update Account Balance
     SELECT *
-    FROM insert_entry_and_update_balance(temp_transaction.sender_id, arg_transaction_id, arg_request_id, arg_sender_amount, 'DEBIT')
+    FROM insert_entry_and_update_balance(temp_transaction.sender_id, arg_transaction_id, arg_request_id,
+                                         arg_sender_amount, 'DEBIT')
     INTO sender_entry_result;
     result.sender_entry_id = sender_entry_result.entry_id;
     result.sender_balance_id = sender_entry_result.balance_id;
 
     --Insert Receiver Entry amd Update Account Balance
     SELECT *
-    FROM insert_entry_and_update_balance(temp_transaction.receiver_id, arg_transaction_id, arg_request_id, arg_receiver_amount, 'CREDIT')
+    FROM insert_entry_and_update_balance(temp_transaction.receiver_id, arg_transaction_id, arg_request_id,
+                                         arg_receiver_amount, 'CREDIT')
     INTO receiver_entry_result;
     result.receiver_entry_id = receiver_entry_result.entry_id;
     result.receiver_balance_id = receiver_entry_result.balance_id;

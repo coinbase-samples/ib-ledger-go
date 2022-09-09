@@ -77,7 +77,8 @@ BEGIN
 
     --Insert Receiver Entry amd Update Account Balance
     SELECT *
-    FROM insert_entry_and_update_balance(temp_transaction.receiver_id, arg_transaction_id, arg_request_id, arg_receiver_amount, 'CREDIT')
+    FROM insert_entry_and_update_balance(temp_transaction.receiver_id, arg_transaction_id, arg_request_id,
+                                         arg_receiver_amount, 'CREDIT')
     INTO receiver_entry_result;
     result.receiver_entry_id = receiver_entry_result.entry_id;
     result.receiver_balance_id = receiver_entry_result.balance_id;

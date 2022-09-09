@@ -44,15 +44,21 @@ BEGIN
 
     LOCK TABLE account IN ROW EXCLUSIVE MODE;
     --validate accounts exist and lock account rows if they do
-    SELECT * FROM account
-    WHERE currency = arg_sender_currency AND user_id = arg_sender_user_id
-    INTO temp_sender_account FOR UPDATE;
+    SELECT *
+    FROM account
+    WHERE currency = arg_sender_currency
+      AND user_id = arg_sender_user_id
+    INTO temp_sender_account FOR
+    UPDATE;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'sender account missing';
     END IF;
-    SELECT * FROM account
-    WHERE currency = arg_receiver_currency AND user_id = arg_receiver_user_id
-    INTO temp_receiver_account FOR UPDATE;
+    SELECT *
+    FROM account
+    WHERE currency = arg_receiver_currency
+      AND user_id = arg_receiver_user_id
+    INTO temp_receiver_account FOR
+    UPDATE;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'receiver account missing';
     END IF;
