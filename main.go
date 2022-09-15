@@ -20,8 +20,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
-	"os"
 
+	"github.com/coinbase-samples/ib-ledger-go/config"
 	"github.com/coinbase-samples/ib-ledger-go/repository"
 	"github.com/coinbase-samples/ib-ledger-go/service"
 
@@ -43,29 +43,36 @@ var (
 
 func main() {
 
+	var app config.AppConfig
+
+	config.Setup(&app)
+	logrusLogger.Println("starting app with config", app)
+
+	logLevel, _ := log.ParseLevel(app.LogLevel)
+	logrusLogger.SetLevel(logLevel)
+
 	//setup conn
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", "8443"))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", app.Port))
 	if err != nil {
 		logrusLogger.Fatalln("Failed to listen for gRPC: %v", err)
 	}
 
 	// Logrus entry is used, allowing pre-definition of certain fields by the user.
 	// See example setup here https://github.com/grpc-ecosystem/go-grpc-middleware/blob/master/logging/logrus/examples_test.go
-	//logrusEntry := log.NewEntry(logrusLogger)
-	/*opts := []grpc_logrus.Option{
+	/*logrusEntry := log.NewEntry(logrusLogger)
+	opts := []grpc_logrus.Option{
 		grpc_logrus.WithDurationField(func(duration time.Duration) (key string, value interface{}) {
 			return "grpc.time_ns", duration.Nanoseconds()
 		}),
-	}*/
-	//grpc_logrus.ReplaceGrpcLogger(logrusEntry)
-
-	env := os.Getenv("ENV_NAME")
-	if env == "" {
+	}
+	grpc_logrus.ReplaceGrpcLogger(logrusEntry)
+	*/
+	if app.Env == "" {
 		log.Fatalf("no environment name set")
 	}
 
 	var server *grpc.Server
-	if env == "local" {
+	if app.Env == "local" {
 		server = grpc.NewServer()
 	} else {
 		// load tls for grpc
@@ -85,7 +92,7 @@ func main() {
 	grpc_health_v1.RegisterHealthServer(server, healthServer)
 
 	// Setup application service
-	dba := repository.NewPostgresHandler(env)
+	dba := repository.NewPostgresHandler(app)
 	service := service.NewService(dba)
 
 	api.RegisterLedgerServer(server, service)

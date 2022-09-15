@@ -21,8 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"os"
 
+	"github.com/coinbase-samples/ib-ledger-go/config"
 	"github.com/coinbase-samples/ib-ledger-go/model"
 	"github.com/coinbase-samples/ib-ledger-go/utils"
 
@@ -37,14 +37,22 @@ type PostgresRepository struct {
 	Pool *pgxpool.Pool
 }
 
-func NewPostgresHandler(env string) *PostgresRepository {
-	dbCredsString := os.Getenv("DB_CREDENTIALS")
-	if dbCredsString == "" {
+func NewPostgresHandler(app config.AppConfig) *PostgresRepository {
+
+	if app.DbCreds == "" {
 		log.Fatalf("no environment variable set for DB_CREDENTIALS")
 	}
 
+	if app.DbHostname == "" {
+		log.Fatalf("no environment variable set for DB_HOSTNAME")
+	}
+
+	if app.DbPort == "" {
+		log.Fatalf("no environment variable set for DB_PORT")
+	}
+
 	var dbCredsJson map[string]interface{}
-	err := json.Unmarshal([]byte(dbCredsString), &dbCredsJson)
+	err := json.Unmarshal([]byte(app.DbCreds), &dbCredsJson)
 
 	if err != nil {
 		log.Fatalf("unable to unmarshal the cred string")
@@ -53,23 +61,13 @@ func NewPostgresHandler(env string) *PostgresRepository {
 	dbUsername := dbCredsJson["username"].(string)
 	dbPassword := url.QueryEscape(dbCredsJson["password"].(string))
 
-	dbEndpoint := os.Getenv("DB_HOSTNAME")
-	if dbEndpoint == "" {
-		log.Fatalf("no environment variable set for DB_HOSTNAME")
-	}
+	dbUrl := fmt.Sprintf("postgres://%s:%s@%s:%s/ledger", dbUsername, dbPassword, app.DbHostname, app.DbPort)
 
-	dbPort := os.Getenv("DB_PORT")
-	if dbPort == "" {
-		log.Fatalf("no environment variable set for DB_PORT")
-	}
-
-	dbUrl := fmt.Sprintf("postgres://%s:%s@%s:%s/ledger", dbUsername, dbPassword, dbEndpoint, dbPort)
-
-	if env == "local" {
+	if app.Env == "local" {
 		dbUrl += "?sslmode=disable"
 	}
 
-	log.Printf("attempting to connect to database with username: %v, hostname: %v, and port %v", dbUsername, dbEndpoint, dbPort)
+	log.Printf("attempting to connect to database with username: %v, hostname: %v, and port %v", dbUsername, app.DbHostname, app.DbPort)
 	pool, err := pgxpool.Connect(context.Background(), dbUrl)
 
 	if err != nil {
@@ -175,7 +173,7 @@ func (handler *PostgresRepository) CancelTransaction(ctx context.Context, reques
 func (handler *PostgresRepository) GetAllAccountsAndMostRecentBalances(ctx context.Context, userId string) ([]*model.GetAccountResult, error) {
 	var transactionResult []*model.GetAccountResult
 
-	const sql = `SELECT account_id, currency, balance, hold, available FROM get_balances_for_users($1)`
+	const sql = `SELECT account_id, currency, balance, hold, available, created_at FROM get_balances_for_users($1)`
 
 	err := pgxscan.Select(context.Background(), handler.Pool, &transactionResult, sql, userId)
 	if err != nil {
