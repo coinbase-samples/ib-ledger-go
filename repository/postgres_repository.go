@@ -172,16 +172,16 @@ func (handler *PostgresRepository) CancelTransaction(ctx context.Context, reques
 }
 
 func (handler *PostgresRepository) GetAllAccountsAndMostRecentBalances(ctx context.Context, userId string) ([]*model.GetAccountResult, error) {
-	var transactionResult []*model.GetAccountResult
+	var accountResult []*model.GetAccountResult
 	l := ctxlogrus.Extract(ctx)
 
 	const sql = `SELECT account_id, currency, balance, hold, available, created_at FROM get_balances_for_users($1)`
 
-	err := pgxscan.Select(context.Background(), handler.Pool, &transactionResult, sql, userId)
+	err := pgxscan.Select(context.Background(), handler.Pool, &accountResult, sql, userId)
 	if err != nil {
 		l.Debugln("error getting accounts", err)
 		return nil, err
 	}
-	l.Debugln("fetched accounts and balances", transactionResult)
-	return transactionResult, nil
+	l.Debugln("fetched accounts and balances", accountResult)
+	return accountResult, nil
 }
