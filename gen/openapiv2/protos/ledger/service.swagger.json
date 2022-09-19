@@ -1,0 +1,259 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "protos/ledger/service.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "Ledger"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "HealthCheckResponseServingStatus": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "SERVING",
+        "NOT_SERVING"
+      ],
+      "default": "UNKNOWN"
+    },
+    "ledgerAccount": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "portfolioId": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "ledgerAccountAndBalance": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "balance": {
+          "type": "string"
+        },
+        "hold": {
+          "type": "string"
+        },
+        "available": {
+          "type": "string"
+        },
+        "balanceAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "ledgerAccountBalance": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "balance": {
+          "type": "string"
+        },
+        "hold": {
+          "type": "string"
+        },
+        "available": {
+          "type": "string"
+        },
+        "accountId": {
+          "type": "string"
+        }
+      }
+    },
+    "ledgerCreateTransactionResponse": {
+      "type": "object",
+      "properties": {
+        "transaction": {
+          "$ref": "#/definitions/ledgerTransaction"
+        }
+      }
+    },
+    "ledgerFinalizeTransactionResponse": {
+      "type": "object",
+      "properties": {
+        "successful": {
+          "type": "boolean"
+        },
+        "failureMessage": {
+          "type": "string"
+        }
+      }
+    },
+    "ledgerGetAccountResponse": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/ledgerAccount"
+        }
+      }
+    },
+    "ledgerGetAccountsResponse": {
+      "type": "object",
+      "properties": {
+        "accounts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ledgerAccountAndBalance"
+          }
+        }
+      }
+    },
+    "ledgerGetBalanceResponse": {
+      "type": "object",
+      "properties": {
+        "accountBalance": {
+          "$ref": "#/definitions/ledgerAccountBalance"
+        }
+      }
+    },
+    "ledgerGetBalancesResponse": {
+      "type": "object",
+      "properties": {
+        "accountBalances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ledgerAccountBalance"
+          }
+        }
+      }
+    },
+    "ledgerHealthCheckResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/HealthCheckResponseServingStatus"
+        }
+      }
+    },
+    "ledgerInitializeAccountResponse": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/ledgerAccount"
+        },
+        "accountBalance": {
+          "$ref": "#/definitions/ledgerAccountBalance"
+        }
+      }
+    },
+    "ledgerPartialReleaseHoldResponse": {
+      "type": "object",
+      "properties": {
+        "successful": {
+          "type": "boolean"
+        },
+        "failureMessage": {
+          "type": "string"
+        }
+      }
+    },
+    "ledgerTransaction": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "senderId": {
+          "type": "string"
+        },
+        "receiverId": {
+          "type": "string"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "transactionType": {
+          "$ref": "#/definitions/ledgerTransactionType"
+        },
+        "transactionStatus": {
+          "$ref": "#/definitions/ledgerTransactionStatus"
+        },
+        "finalizedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "ledgerTransactionStatus": {
+      "type": "string",
+      "enum": [
+        "COMPLETE",
+        "FAILED",
+        "CANCELED",
+        "PENDING"
+      ],
+      "default": "COMPLETE"
+    },
+    "ledgerTransactionType": {
+      "type": "string",
+      "enum": [
+        "TRANSFER",
+        "ORDER",
+        "CONVERT"
+      ],
+      "default": "TRANSFER"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}
