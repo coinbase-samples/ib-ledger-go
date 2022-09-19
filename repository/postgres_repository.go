@@ -25,6 +25,7 @@ import (
 	"github.com/coinbase-samples/ib-ledger-go/config"
 	"github.com/coinbase-samples/ib-ledger-go/model"
 	"github.com/coinbase-samples/ib-ledger-go/utils"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
 
 	api "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
 
@@ -172,13 +173,15 @@ func (handler *PostgresRepository) CancelTransaction(ctx context.Context, reques
 
 func (handler *PostgresRepository) GetAllAccountsAndMostRecentBalances(ctx context.Context, userId string) ([]*model.GetAccountResult, error) {
 	var transactionResult []*model.GetAccountResult
+	l := ctxlogrus.Extract(ctx)
 
 	const sql = `SELECT account_id, currency, balance, hold, available, created_at FROM get_balances_for_users($1)`
 
 	err := pgxscan.Select(context.Background(), handler.Pool, &transactionResult, sql, userId)
 	if err != nil {
+		l.Debugln("error getting accounts", err)
 		return nil, err
 	}
-
+	l.Debugln("fetched accounts and balances", transactionResult)
 	return transactionResult, nil
 }

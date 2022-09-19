@@ -20,6 +20,7 @@ DROP TABLE transaction;
 DROP TABLE finalized_transaction;
 DROP TABLE account;
 DROP TABLE account_balance;
+DROP TABLE released_hold;
 DROP TYPE direction;
 DROP TYPE ttype;
 

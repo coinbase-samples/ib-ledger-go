@@ -17,14 +17,22 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/coinbase-samples/ib-ledger-go/config"
 	"github.com/coinbase-samples/ib-ledger-go/repository"
 	"github.com/coinbase-samples/ib-ledger-go/service"
-
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
@@ -48,8 +56,19 @@ func main() {
 	config.Setup(&app)
 	logrusLogger.Println("starting app with config", app)
 
+	tracer := otel.Tracer("ib-ledger-go")
+
+	//setup otel
+	tp, err := config.Init(app)
+
 	logLevel, _ := log.ParseLevel(app.LogLevel)
 	logrusLogger.SetLevel(logLevel)
+
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			logrusLogger.Printf("Error shutting down tracer provider: %v", err)
+		}
+	}()
 
 	//setup conn
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", app.Port))
@@ -59,31 +78,48 @@ func main() {
 
 	// Logrus entry is used, allowing pre-definition of certain fields by the user.
 	// See example setup here https://github.com/grpc-ecosystem/go-grpc-middleware/blob/master/logging/logrus/examples_test.go
-	/*logrusEntry := log.NewEntry(logrusLogger)
+	logrusEntry := log.NewEntry(logrusLogger)
 	opts := []grpc_logrus.Option{
 		grpc_logrus.WithDurationField(func(duration time.Duration) (key string, value interface{}) {
 			return "grpc.time_ns", duration.Nanoseconds()
 		}),
 	}
 	grpc_logrus.ReplaceGrpcLogger(logrusEntry)
-	*/
+
 	if app.Env == "" {
 		log.Fatalf("no environment name set")
 	}
 
 	var server *grpc.Server
 	if app.Env == "local" {
-		server = grpc.NewServer()
+		server = grpc.NewServer(
+			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+				grpc_ctxtags.UnaryServerInterceptor(),
+				otelgrpc.UnaryServerInterceptor(),
+				grpc_logrus.UnaryServerInterceptor(logrusEntry, opts...),
+				//aw.InterceptorNew(),
+				grpc_validator.UnaryServerInterceptor(),
+				grpc_recovery.UnaryServerInterceptor(),
+			)),
+		)
 	} else {
 		// load tls for grpc
 		tlsCredentials, err := loadCredentials()
 		if err != nil {
 			logrusLogger.Fatalln("Cannot load TLS credentials: ", err)
 		}
-
 		server = grpc.NewServer(
+			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+				grpc_ctxtags.UnaryServerInterceptor(),
+				otelgrpc.UnaryServerInterceptor(),
+				grpc_logrus.UnaryServerInterceptor(logrusEntry, opts...),
+				// aw.InterceptorNew(),
+				grpc_validator.UnaryServerInterceptor(),
+				grpc_recovery.UnaryServerInterceptor(),
+			)),
 			grpc.Creds(tlsCredentials),
 		)
+
 	}
 
 	//setup health server
@@ -93,7 +129,7 @@ func main() {
 
 	// Setup application service
 	dba := repository.NewPostgresHandler(app)
-	service := service.NewService(dba)
+	service := service.NewService(dba, tracer)
 
 	api.RegisterLedgerServer(server, service)
 	reflection.Register(server)
