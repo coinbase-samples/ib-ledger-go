@@ -28,9 +28,9 @@ type InitializeAccountResult struct {
 	UserId      uuid.UUID `db:"user_id"`
 	Currency    string    `db:"currency"`
 	CreatedAt   time.Time `db:"created_at"`
-	Balance     int64     `db:"balance"`
-	Hold        int64     `db:"hold"`
-	Available   int64     `db:"available"`
+	Balance     uint64    `db:"balance"`
+	Hold        uint64    `db:"hold"`
+	Available   uint64    `db:"available"`
 }
 
 type CreateTransactionResult struct {
@@ -53,8 +53,8 @@ type TransactionResult struct {
 type GetAccountResult struct {
 	AccountId uuid.UUID `db:"account_id"`
 	Currency  string    `db:"currency"`
-	Balance   int64     `db:"balance"`
-	Hold      int64     `db:"hold"`
-	Available int64     `db:"available"`
+	Balance   uint64    `db:"balance"`
+	Hold      uint64    `db:"hold"`
+	Available uint64    `db:"available"`
 	CreatedAt time.Time `db:"created_at"`
 }

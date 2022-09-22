@@ -15,9 +15,10 @@
  */
 
 DROP TABLE entry;
+DROP TABLE finalized_transaction;
+DROP TABLE released_hold;
 DROP TABLE hold;
 DROP TABLE transaction;
-DROP TABLE finalized_transaction;
 DROP TABLE account;
 DROP TABLE account_balance;
 DROP TYPE direction;
