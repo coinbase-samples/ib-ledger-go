@@ -25,7 +25,7 @@ func Setup(app *AppConfig) {
 	viper.AllowEmptyEnv(true)
 	// set defaults
 	viper.SetDefault("LOG_LEVEL", "warning")
-	viper.SetDefault("PORT", "8445")
+	viper.SetDefault("PORT", "8443")
 	viper.SetDefault("GRPC_PORT", "50002")
 	viper.SetDefault("ENV_NAME", "local")
 	viper.SetDefault("DB_CREDENTIALS", "{\"password\":\"postgres\",\"username\":\"postgres\"}")
