@@ -74,7 +74,7 @@ BEGIN
 
     INSERT INTO account_balance(account_id, request_id, balance, hold, available)
     VALUES (temp_transaction.sender_id, arg_request_id, sender_most_recent_balance.balance, temp_hold_amount,
-            sender_most_recent_balance - temp_hold_amount)
+            sender_most_recent_balance.balance - temp_hold_amount)
     RETURNING id INTO temp_sender_new_balance_id;
 
     result.sender_balance_id = temp_sender_new_balance_id;
@@ -149,7 +149,7 @@ BEGIN
 
     INSERT INTO account_balance(account_id, request_id, balance, hold, available)
     VALUES (temp_transaction.sender_id, arg_request_id, sender_most_recent_balance.balance, temp_hold_amount,
-            sender_most_recent_balance - temp_hold_amount)
+            sender_most_recent_balance.balance - temp_hold_amount)
     RETURNING id INTO temp_sender_new_balance_id;
 
     result.sender_balance_id = temp_sender_new_balance_id;
