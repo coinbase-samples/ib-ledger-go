@@ -72,9 +72,9 @@ BEGIN
 
     temp_hold_amount = sender_most_recent_balance.hold - temp_hold.amount;
 
-    INSERT INTO account_balance(account_id, request_id, balance, hold, available)
+    INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
     VALUES (temp_transaction.sender_id, arg_request_id, sender_most_recent_balance.balance, temp_hold_amount,
-            sender_most_recent_balance.balance - temp_hold_amount)
+            sender_most_recent_balance.balance - temp_hold_amount, sender_most_recent_balance.count + 1)
     RETURNING id INTO temp_sender_new_balance_id;
 
     result.sender_balance_id = temp_sender_new_balance_id;
@@ -147,9 +147,9 @@ BEGIN
 
     temp_hold_amount = sender_most_recent_balance.hold - temp_hold.amount;
 
-    INSERT INTO account_balance(account_id, request_id, balance, hold, available)
+    INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
     VALUES (temp_transaction.sender_id, arg_request_id, sender_most_recent_balance.balance, temp_hold_amount,
-            sender_most_recent_balance.balance - temp_hold_amount)
+            sender_most_recent_balance.balance - temp_hold_amount, sender_most_recent_balance.count + 1)
     RETURNING id INTO temp_sender_new_balance_id;
 
     result.sender_balance_id = temp_sender_new_balance_id;
