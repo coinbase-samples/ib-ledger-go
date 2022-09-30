@@ -9,6 +9,6 @@ import (
 func init() {
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetReportCaller(true)
-	log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.WarnLevel)
 	log.SetOutput(os.Stdout)
 }
