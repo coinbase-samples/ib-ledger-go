@@ -44,17 +44,12 @@ import (
 	api "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
 )
 
-var (
-	//setup logrus for interceptor
-	logrusLogger = log.New()
-)
-
 func main() {
 
 	var app config.AppConfig
 
 	config.Setup(&app)
-	logrusLogger.Println("starting app with config", app)
+	log.Println("starting app with config", app)
 
 	tracer := otel.Tracer("ib-ledger-go")
 
@@ -62,34 +57,37 @@ func main() {
 	tp, err := config.Init(app)
 
 	if err != nil {
-		logrusLogger.Fatalln("Failed to configure env variables: %v", err)
+		log.Fatalln("Failed to configure env variables: %v", err)
 	}
+
+	if app.Env == "" {
+		log.Fatalln("no environment name set")
+	}
+
+	logLevel, _ := log.ParseLevel(app.LogLevel)
+	log.SetLevel(logLevel)
 
 	defer func() {
 		if err := tp.Shutdown(context.Background()); err != nil {
-			logrusLogger.Printf("Error shutting down tracer provider: %v", err)
+			log.Warnf("Error shutting down tracer provider: %v", err)
 		}
 	}()
 
 	//setup conn
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", app.Port))
 	if err != nil {
-		logrusLogger.Fatalln("Failed to listen for gRPC: %v", err)
+		log.Fatalf("Failed to listen for gRPC: %v", err)
 	}
 
 	// Logrus entry is used, allowing pre-definition of certain fields by the user.
 	// See example setup here https://github.com/grpc-ecosystem/go-grpc-middleware/blob/master/logging/logrus/examples_test.go
-	logrusEntry := log.NewEntry(logrusLogger)
+	logrusEntry := log.NewEntry(log.StandardLogger())
 	opts := []grpc_logrus.Option{
 		grpc_logrus.WithDurationField(func(duration time.Duration) (key string, value interface{}) {
 			return "grpc.time_ns", duration.Nanoseconds()
 		}),
 	}
 	grpc_logrus.ReplaceGrpcLogger(logrusEntry)
-
-	if app.Env == "" {
-		logrusLogger.Fatalln("no environment name set")
-	}
 
 	var server *grpc.Server
 	if app.Env == "local" {
@@ -107,7 +105,7 @@ func main() {
 		// load tls for grpc
 		tlsCredentials, err := loadCredentials()
 		if err != nil {
-			logrusLogger.Fatalln("Cannot load TLS credentials: ", err)
+			log.Fatalln("Cannot load TLS credentials: ", err)
 		}
 		server = grpc.NewServer(
 			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
@@ -136,7 +134,7 @@ func main() {
 	reflection.Register(server)
 	log.Printf("server listening at %v", lis.Addr())
 	if err := server.Serve(lis); err != nil {
-		logrusLogger.Fatalln("failed to serve: %v", err)
+		log.Fatalf("failed to serve: %v", err)
 	}
 }
 
