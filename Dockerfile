@@ -20,6 +20,8 @@ FROM $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/go-base-$ENV_NAME:latest as build
 
 ARG CACHEBUST=1
 
+RUN apk add curl
+
 RUN PREFIX="/usr/local" && \
     VERSION="1.8.0" && \
     curl -sSL \
@@ -34,7 +36,7 @@ RUN go install google.golang.org/protobuf/cmd/protoc-gen-go \
     google.golang.org/grpc/cmd/protoc-gen-go-grpc \
     github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 \
     github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway 
-    
+
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -a -installsuffix cgo -o main main.go
 
 RUN openssl genrsa -out server.key 2048
