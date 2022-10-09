@@ -21,7 +21,7 @@ import (
 
 	"github.com/coinbase-samples/ib-ledger-go/model"
 
-	api "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
+	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 )
 
 type TestPostgres struct {

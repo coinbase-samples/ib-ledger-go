@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"log"
 
-	ledger "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
+	ledger "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

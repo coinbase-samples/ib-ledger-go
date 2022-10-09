@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"log"
 
-	api "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
+	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"

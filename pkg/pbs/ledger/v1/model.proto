@@ -21,7 +21,7 @@ package protos.ledger;
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 
-option go_package = "github.com/coinbase-samples/ib-ledger-go/protos/ledger";
+option go_package = "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1";
 
 message Account {
   google.protobuf.StringValue id = 1;

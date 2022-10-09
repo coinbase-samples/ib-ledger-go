@@ -19,7 +19,7 @@ package service
 import (
 	"context"
 
-	api "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
+	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 )
 
 func (s *Service) HealthCheck(ctx context.Context, req *api.HealthCheckRequest) (*api.HealthCheckResponse, error) {

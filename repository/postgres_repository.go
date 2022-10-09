@@ -28,7 +28,7 @@ import (
 	"github.com/coinbase-samples/ib-ledger-go/utils"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
 
-	api "github.com/coinbase-samples/ib-ledger-go/protos/ledger"
+	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgx/v4/pgxpool"
