@@ -26,7 +26,6 @@ import (
 	"github.com/coinbase-samples/ib-ledger-go/config"
 	"github.com/coinbase-samples/ib-ledger-go/repository"
 	"github.com/coinbase-samples/ib-ledger-go/service"
-	_ "github.com/coinbase-samples/ib-ledger-go/tools"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
