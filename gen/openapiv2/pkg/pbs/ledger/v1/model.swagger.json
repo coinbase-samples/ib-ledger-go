@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "protos/ledger/model.proto",
+    "title": "pkg/pbs/ledger/v1/model.proto",
     "version": "version not set"
   },
   "consumes": [

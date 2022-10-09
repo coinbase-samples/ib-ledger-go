@@ -19,7 +19,7 @@ syntax = "proto3";
 package protos.ledger;
 
 import "google/protobuf/wrappers.proto";
-import "protos/ledger/model.proto";
+import "pkg/pbs/ledger/v1/model.proto";
 
 option go_package = "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1";
 

@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: protos/ledger/service.proto
+// source: pkg/pbs/ledger/v1/service.proto
 
-package ledger
+package v1
 
 import (
 	context "context"
@@ -389,5 +389,5 @@ var Ledger_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "protos/ledger/service.proto",
+	Metadata: "pkg/pbs/ledger/v1/service.proto",
 }
