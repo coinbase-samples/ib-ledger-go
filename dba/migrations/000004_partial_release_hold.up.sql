@@ -167,13 +167,15 @@ BEGIN
     RETURNING id INTO receiver_balance_id;
     result.receiver_balance_id = receiver_balance_id;
 
-    --Insert New Hold
-    INSERT INTO hold (account_id, transaction_id, amount, request_id)
-    VALUES (temp_transaction.sender_id, temp_transaction.id, sender_hold_amount,
-            arg_request_id)
-    RETURNING * INTO temp_hold;
-    result.hold_id = temp_hold.id;
-
+    --Insert New Hold if needed
+    IF sender_hold_amount > 0 THEN
+      INSERT INTO hold (account_id, transaction_id, amount, request_id)
+      VALUES (temp_transaction.sender_id, temp_transaction.id, sender_hold_amount,
+              arg_request_id)
+      RETURNING * INTO temp_hold;
+      result.hold_id = temp_hold.id;
+    END IF;
+    
     UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
     UPDATE account SET user_id = receiver_account.user_id WHERE id = receiver_account.id;
 
