@@ -172,34 +172,13 @@ func (handler *PostgresRepository) CompleteTransaction(ctx context.Context, requ
 
 	const sql = `SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id FROM complete_transaction($1, $2, $3, $4, $5, $6, $7)`
 
-	var retailFeeAmount int64
-	if request.RetailFeeAmount == nil {
-		retailFeeAmount = 0
-	} else {
-		retailFeeAmount, _ = strconv.ParseInt(request.RetailFeeAmount.Value, 10, 64)
-	}
-
-	var venueFeeAmount int64
-	if request.VenueFeeAmount == nil {
-		venueFeeAmount = 0
-	} else {
-		venueFeeAmount, _ = strconv.ParseInt(request.VenueFeeAmount.Value, 10, 64)
-	}
-
-	retailAccountId, venueAccountId := utils.GetFeeAccounts("USD")
-
 	err := pgxscan.Select(
 		context.Background(),
 		handler.Pool,
 		&TransactionResult,
 		sql,
 		request.OrderId,
-		request.RequestId,
-		request.ReceiverAmount.Value,
-		retailFeeAmount,
-		retailAccountId,
-		venueFeeAmount,
-		venueAccountId)
+		request.RequestId)
 	if err != nil {
 		return nil, err
 	}
