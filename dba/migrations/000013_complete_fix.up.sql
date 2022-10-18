@@ -22,10 +22,10 @@ CREATE OR REPLACE FUNCTION complete_transaction(
 AS
 $$
 DECLARE
-    temp_transaction      transaction;
-    temp_hold             hold;
-    sender_account        account;
-    receiver_account      account;
+    temp_transaction             transaction;
+    temp_hold                    hold;
+    sender_account               account;
+    receiver_account             account;
     most_recent_sender_balance   account_balance;
     most_recent_receiver_balance account_balance;
     temp_balance_amount          NUMERIC;
@@ -34,7 +34,7 @@ DECLARE
     receiver_entry_id            UUID;
     sender_balance_id            UUID;
     receiver_balance_id          UUID;
-    result                transaction_result;
+    result                       transaction_result;
 BEGIN
     SELECT *
     FROM transaction
@@ -66,17 +66,17 @@ BEGIN
     INTO temp_hold;
 
     IF FOUND THEN
-      --Release the hold
-      INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
-      --Get most recent sender balance
-      SELECT * FROM get_latest_balance(temp_transaction.sender_id) INTO most_recent_sender_balance;
-      --Insert Sender Balance
-      sender_hold_amount = most_recent_sender_balance.hold - temp_hold.amount;
-      INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
-      VALUES (temp_transaction.sender_id, arg_request_id,most_recent_sender_balance.balance, sender_hold_amount,
-              most_recent_sender_balance.balance - sender_hold_amount, most_recent_sender_balance.count + 1)
-      RETURNING id INTO sender_balance_id;
-      result.sender_balance_id = sender_balance_id;
+        --Release the hold
+        INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
+        --Get most recent sender balance
+        SELECT * FROM get_latest_balance(temp_transaction.sender_id) INTO most_recent_sender_balance;
+        --Insert Sender Balance
+        sender_hold_amount = most_recent_sender_balance.hold - temp_hold.amount;
+        INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
+        VALUES (temp_transaction.sender_id, arg_request_id, most_recent_sender_balance.balance, sender_hold_amount,
+                most_recent_sender_balance.balance - sender_hold_amount, most_recent_sender_balance.count + 1)
+        RETURNING id INTO sender_balance_id;
+        result.sender_balance_id = sender_balance_id;
     end if;
 
     --Finalize Transaction

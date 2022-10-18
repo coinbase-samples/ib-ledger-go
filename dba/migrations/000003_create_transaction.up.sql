@@ -57,8 +57,9 @@ BEGIN
     FROM account
     WHERE currency = arg_receiver_currency
       AND user_id = arg_receiver_user_id
-    INTO temp_receiver_account FOR
-    UPDATE;
+    INTO temp_receiver_account
+    FOR
+        UPDATE;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'receiver account missing';
     END IF;

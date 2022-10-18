@@ -11,6 +11,6 @@ BEGIN
         FROM (select id, currency FROM account WHERE user_id = arg_user_id AND currency = arg_currency) acc
                  INNER JOIN
              (SELECT account_id, balance, hold, available, created_at FROM account_balance HAVING count = MAX(count)) ab
-        ON acc.id = ab.account_id;
+             ON acc.id = ab.account_id;
 END
 $$;

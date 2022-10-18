@@ -109,7 +109,8 @@ BEGIN
     END IF;
 
     --Insert Sender Balance
-    temp_balance_amount = most_recent_sender_balance.balance - arg_sender_amount - arg_venue_fee_amount - arg_retail_fee_amount;
+    temp_balance_amount =
+                most_recent_sender_balance.balance - arg_sender_amount - arg_venue_fee_amount - arg_retail_fee_amount;
     sender_hold_amount = temp_hold.amount - arg_sender_amount - arg_retail_fee_amount - arg_venue_fee_amount;
     INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
     VALUES (temp_transaction.sender_id, arg_request_id, temp_balance_amount, sender_hold_amount,

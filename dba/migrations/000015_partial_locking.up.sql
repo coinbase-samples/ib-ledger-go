@@ -30,6 +30,7 @@ AS
 $$
 DECLARE
     temp_transaction             transaction;
+    temp_sender_entry            entry;
     temp_hold                    hold;
     sender_account               account;
     most_recent_sender_balance   account_balance;
@@ -47,15 +48,21 @@ BEGIN
     IF NOT FOUND THEN
         RAISE EXCEPTION 'transaction not found';
     end if;
+
+    --Locking
+    LOCK TABLE account IN ROW EXCLUSIVE MODE;
+    SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
+    SELECT * FROM account WHERE id = temp_transaction.receiver_id into receiver_account FOR UPDATE;
+
     --idempotency
-    SELECT * FROM hold WHERE request_id = arg_request_id into temp_hold;
+    SELECT *
+    FROM entry
+    WHERE transaction_id = arg_transaction_id
+      AND request_id = arg_request_id
+      AND account_id = temp_transaction.sender_id
+    into temp_sender_entry;
     if FOUND THEN
-        result.hold_id = temp_hold.id;
-        result.sender_entry_id = (SELECT id
-                                  FROM entry
-                                  where transaction_id = arg_transaction_id
-                                    AND request_id = arg_request_id
-                                    AND account_id = temp_transaction.sender_id);
+        result.sender_entry_id = temp_sender_entry.id;
         result.receiver_entry_id = (SELECT *
                                     FROM entry
                                     where transaction_id = arg_transaction_id
@@ -71,11 +78,6 @@ BEGIN
                                         AND account_id = temp_transaction.receiver_id);
         return result;
     END IF;
-
-    --Locking
-    LOCK TABLE account IN ROW EXCLUSIVE MODE;
-    SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
-    SELECT * FROM account WHERE id = temp_transaction.receiver_id into receiver_account FOR UPDATE;
 
     SELECT *
     FROM get_unreleased_hold(temp_transaction.id, temp_transaction.sender_id)

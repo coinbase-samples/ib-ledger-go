@@ -115,6 +115,7 @@ CREATE FUNCTION public.cancel_transaction(arg_transaction_id uuid, arg_request_i
     AS $$
 DECLARE
     temp_transaction           transaction;
+    temp_finalized_transaction finalized_transaction;
     temp_hold                  hold;
     sender_account             account;
     sender_most_recent_balance account_balance;
@@ -122,12 +123,19 @@ DECLARE
     temp_sender_new_balance_id uuid;
     result                     transaction_result;
 BEGIN
+    SELECT * FROM transaction WHERE id = arg_transaction_id INTO temp_transaction;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'transaction not found';
+    end if;
+
+    --Locking
+    LOCK TABLE account IN ROW EXCLUSIVE MODE;
+    SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
+
     SELECT *
-    FROM transaction
-    WHERE id = arg_transaction_id
-      AND EXISTS(
-            SELECT * FROM finalized_transaction WHERE transaction_id = arg_transaction_id)
-    INTO temp_transaction;
+    FROM finalized_transaction
+    WHERE transaction_id = arg_transaction_id
+    INTO temp_finalized_transaction;
     IF FOUND THEN
         result.sender_balance_id = (SELECT id
                                     FROM account_balance
@@ -137,39 +145,36 @@ BEGIN
                                       FROM account_balance
                                       WHERE request_id = arg_request_id
                                         AND account_id = temp_transaction.receiver_id);
+        UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
         return result;
     end if;
-
-    --Locking
-    LOCK TABLE account IN ROW EXCLUSIVE MODE;
-    SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
-
-    SELECT * FROM transaction WHERE id = arg_transaction_id INTO temp_transaction;
 
     SELECT *
     FROM get_unreleased_hold(temp_transaction.id, temp_transaction.sender_id)
     INTO temp_hold;
 
-    --Release the hold
-    INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
+    IF FOUND THEN
+        --Release the hold
+        INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
 
-    result.hold_id = temp_hold.id;
+        result.hold_id = temp_hold.id;
 
-    --Update Sender Balance
-    SELECT *
-    FROM get_latest_balance(
-            temp_transaction.sender_id
-        )
-    INTO sender_most_recent_balance;
+        --Update Sender Balance
+        SELECT *
+        FROM get_latest_balance(
+                temp_transaction.sender_id
+            )
+        INTO sender_most_recent_balance;
 
-    temp_hold_amount = sender_most_recent_balance.hold - temp_hold.amount;
+        temp_hold_amount = sender_most_recent_balance.hold - temp_hold.amount;
 
-    INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
-    VALUES (temp_transaction.sender_id, arg_request_id, sender_most_recent_balance.balance, temp_hold_amount,
-            sender_most_recent_balance.balance - temp_hold_amount, sender_most_recent_balance.count + 1)
-    RETURNING id INTO temp_sender_new_balance_id;
+        INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
+        VALUES (temp_transaction.sender_id, arg_request_id, sender_most_recent_balance.balance, temp_hold_amount,
+                sender_most_recent_balance.balance - temp_hold_amount, sender_most_recent_balance.count + 1)
+        RETURNING id INTO temp_sender_new_balance_id;
 
-    result.sender_balance_id = temp_sender_new_balance_id;
+        result.sender_balance_id = temp_sender_new_balance_id;
+    END IF;
 
     --Finalize Transaction
     INSERT INTO finalized_transaction (transaction_id, canceled_at, request_id)
@@ -192,10 +197,11 @@ CREATE FUNCTION public.complete_transaction(arg_transaction_id uuid, arg_request
     LANGUAGE plpgsql
     AS $$
 DECLARE
-    temp_transaction      transaction;
-    temp_hold             hold;
-    sender_account        account;
-    receiver_account      account;
+    temp_transaction             transaction;
+    temp_finalized_transaction finalized_transaction;
+    temp_hold                    hold;
+    sender_account               account;
+    receiver_account             account;
     most_recent_sender_balance   account_balance;
     most_recent_receiver_balance account_balance;
     temp_balance_amount          NUMERIC;
@@ -204,14 +210,22 @@ DECLARE
     receiver_entry_id            UUID;
     sender_balance_id            UUID;
     receiver_balance_id          UUID;
-    result                transaction_result;
+    result                       transaction_result;
 BEGIN
+    SELECT * FROM transaction WHERE id = arg_transaction_id INTO temp_transaction;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'transaction not found';
+    end if;
+
+    --Locking
+    LOCK TABLE account IN ROW EXCLUSIVE MODE;
+    SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
+    SELECT * FROM account WHERE id = temp_transaction.receiver_id into receiver_account FOR UPDATE;
+
     SELECT *
-    FROM transaction
-    WHERE id = arg_transaction_id
-      AND EXISTS(
-            SELECT * FROM finalized_transaction WHERE transaction_id = arg_transaction_id)
-    INTO temp_transaction;
+    FROM finalized_transaction
+    WHERE transaction_id = arg_transaction_id
+    INTO temp_finalized_transaction;
     IF FOUND THEN
         result.sender_balance_id = (SELECT id
                                     FROM account_balance
@@ -221,32 +235,27 @@ BEGIN
                                       FROM account_balance
                                       WHERE request_id = arg_request_id
                                         AND account_id = temp_transaction.receiver_id);
+        UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
+        UPDATE account SET user_id = receiver_account.user_id WHERE id = receiver_account.id;
         return result;
     end if;
-
-    --Locking
-    LOCK TABLE account IN ROW EXCLUSIVE MODE;
-    SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
-    SELECT * FROM account WHERE id = temp_transaction.receiver_id into receiver_account FOR UPDATE;
-
-    SELECT * FROM transaction WHERE id = arg_transaction_id INTO temp_transaction;
 
     SELECT *
     FROM get_unreleased_hold(temp_transaction.id, temp_transaction.sender_id)
     INTO temp_hold;
 
     IF FOUND THEN
-      --Release the hold
-      INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
-      --Get most recent sender balance
-      SELECT * FROM get_latest_balance(temp_transaction.sender_id) INTO most_recent_sender_balance;
-      --Insert Sender Balance
-      sender_hold_amount = most_recent_sender_balance.hold - temp_hold.amount;
-      INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
-      VALUES (temp_transaction.sender_id, arg_request_id,most_recent_sender_balance.balance, sender_hold_amount,
-              most_recent_sender_balance.balance - sender_hold_amount, most_recent_sender_balance.count + 1)
-      RETURNING id INTO sender_balance_id;
-      result.sender_balance_id = sender_balance_id;
+        --Release the hold
+        INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
+        --Get most recent sender balance
+        SELECT * FROM get_latest_balance(temp_transaction.sender_id) INTO most_recent_sender_balance;
+        --Insert Sender Balance
+        sender_hold_amount = most_recent_sender_balance.hold - temp_hold.amount;
+        INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
+        VALUES (temp_transaction.sender_id, arg_request_id, most_recent_sender_balance.balance, sender_hold_amount,
+                most_recent_sender_balance.balance - sender_hold_amount, most_recent_sender_balance.count + 1)
+        RETURNING id INTO sender_balance_id;
+        result.sender_balance_id = sender_balance_id;
     end if;
 
     --Finalize Transaction
@@ -320,8 +329,9 @@ BEGIN
     FROM account
     WHERE currency = arg_receiver_currency
       AND user_id = arg_receiver_user_id
-    INTO temp_receiver_account FOR
-    UPDATE;
+    INTO temp_receiver_account
+    FOR
+        UPDATE;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'receiver account missing';
     END IF;
@@ -370,6 +380,7 @@ CREATE FUNCTION public.fail_transaction(arg_transaction_id uuid, arg_request_id 
     AS $$
 DECLARE
     temp_transaction           transaction;
+    temp_finalized_transaction finalized_transaction;
     temp_hold                  hold;
     sender_account             account;
     sender_most_recent_balance account_balance;
@@ -377,12 +388,19 @@ DECLARE
     temp_sender_new_balance_id uuid;
     result                     transaction_result;
 BEGIN
+    SELECT * FROM transaction WHERE id = arg_transaction_id INTO temp_transaction;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'transaction not found';
+    end if;
+
+    --Locking
+    LOCK TABLE account IN ROW EXCLUSIVE MODE;
+    SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
+
     SELECT *
-    FROM transaction
-    WHERE id = arg_transaction_id
-      AND EXISTS(
-            SELECT * FROM finalized_transaction WHERE transaction_id = arg_transaction_id)
-    INTO temp_transaction;
+    FROM finalized_transaction
+    WHERE transaction_id = arg_transaction_id
+    INTO temp_finalized_transaction;
     IF FOUND THEN
         result.sender_balance_id = (SELECT id
                                     FROM account_balance
@@ -392,39 +410,36 @@ BEGIN
                                       FROM account_balance
                                       WHERE request_id = arg_request_id
                                         AND account_id = temp_transaction.receiver_id);
+        UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
         return result;
     end if;
-
-    --Locking
-    LOCK TABLE account IN ROW EXCLUSIVE MODE;
-    SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
-
-    SELECT * FROM transaction WHERE id = arg_transaction_id INTO temp_transaction;
 
     SELECT *
     FROM get_unreleased_hold(temp_transaction.id, temp_transaction.sender_id)
     INTO temp_hold;
 
-    --Release the hold
-    INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
+    IF FOUND THEN
+        --Release the hold
+        INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
 
-    result.hold_id = temp_hold.id;
+        result.hold_id = temp_hold.id;
 
-    --Update Sender Balance
-    SELECT *
-    FROM get_latest_balance(
-            temp_transaction.sender_id
-        )
-    INTO sender_most_recent_balance;
+        --Update Sender Balance
+        SELECT *
+        FROM get_latest_balance(
+                temp_transaction.sender_id
+            )
+        INTO sender_most_recent_balance;
 
-    temp_hold_amount = sender_most_recent_balance.hold - temp_hold.amount;
+        temp_hold_amount = sender_most_recent_balance.hold - temp_hold.amount;
 
-    INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
-    VALUES (temp_transaction.sender_id, arg_request_id, sender_most_recent_balance.balance, temp_hold_amount,
-            sender_most_recent_balance.balance - temp_hold_amount, sender_most_recent_balance.count + 1)
-    RETURNING id INTO temp_sender_new_balance_id;
+        INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
+        VALUES (temp_transaction.sender_id, arg_request_id, sender_most_recent_balance.balance, temp_hold_amount,
+                sender_most_recent_balance.balance - temp_hold_amount, sender_most_recent_balance.count + 1)
+        RETURNING id INTO temp_sender_new_balance_id;
 
-    result.sender_balance_id = temp_sender_new_balance_id;
+        result.sender_balance_id = temp_sender_new_balance_id;
+    END IF;
 
     --Finalize Transaction
     INSERT INTO finalized_transaction (transaction_id, failed_at, request_id)
@@ -452,7 +467,7 @@ BEGIN
         FROM (select id, currency FROM account WHERE user_id = arg_user_id AND currency = arg_currency) acc
                  INNER JOIN
              (SELECT account_id, balance, hold, available, created_at FROM account_balance HAVING count = MAX(count)) ab
-        ON acc.id = ab.account_id;
+             ON acc.id = ab.account_id;
 END
 $$;
 
@@ -471,9 +486,12 @@ BEGIN
         SELECT acc.id, acc.currency, ab.balance, ab.hold, ab.available, ab.created_at
         FROM (select id, currency FROM account WHERE user_id = arg_user_id) acc
                  INNER JOIN
-             (SELECT account_id, MAX(count) as max FROM account_balance WHERE account_id IN (
-                select id FROM account WHERE user_id = arg_user_id
-                ) GROUP BY account_id ) recent_balance
+             (SELECT account_id, MAX(count) as max
+              FROM account_balance
+              WHERE account_id IN (select id
+                                   FROM account
+                                   WHERE user_id = arg_user_id)
+              GROUP BY account_id) recent_balance
              ON acc.id = recent_balance.account_id
                  INNER JOIN
              account_balance ab
@@ -651,8 +669,19 @@ BEGIN
     IF NOT FOUND THEN
         RAISE EXCEPTION 'transaction not found';
     end if;
+
+    --Locking
+    LOCK TABLE account IN ROW EXCLUSIVE MODE;
+    SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
+    SELECT * FROM account WHERE id = temp_transaction.receiver_id into receiver_account FOR UPDATE;
+
     --idempotency
-    SELECT * FROM entry WHERE transaction_id = arg_transaction_id AND request_id = arg_request_id AND account_id = temp_transaction.sender_id into temp_sender_entry;
+    SELECT *
+    FROM entry
+    WHERE transaction_id = arg_transaction_id
+      AND request_id = arg_request_id
+      AND account_id = temp_transaction.sender_id
+    into temp_sender_entry;
     if FOUND THEN
         result.sender_entry_id = temp_sender_entry.id;
         result.receiver_entry_id = (SELECT *
@@ -670,11 +699,6 @@ BEGIN
                                         AND account_id = temp_transaction.receiver_id);
         return result;
     END IF;
-
-    --Locking
-    LOCK TABLE account IN ROW EXCLUSIVE MODE;
-    SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
-    SELECT * FROM account WHERE id = temp_transaction.receiver_id into receiver_account FOR UPDATE;
 
     SELECT *
     FROM get_unreleased_hold(temp_transaction.id, temp_transaction.sender_id)
@@ -708,7 +732,8 @@ BEGIN
     END IF;
 
     --Insert Sender Balance
-    temp_balance_amount = most_recent_sender_balance.balance - arg_sender_amount - arg_venue_fee_amount - arg_retail_fee_amount;
+    temp_balance_amount =
+                most_recent_sender_balance.balance - arg_sender_amount - arg_venue_fee_amount - arg_retail_fee_amount;
     sender_hold_amount = temp_hold.amount - arg_sender_amount - arg_retail_fee_amount - arg_venue_fee_amount;
     INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
     VALUES (temp_transaction.sender_id, arg_request_id, temp_balance_amount, sender_hold_amount,
@@ -733,13 +758,13 @@ BEGIN
 
     --Insert New Hold if needed
     IF sender_hold_amount > 0 THEN
-      INSERT INTO hold (account_id, transaction_id, amount, request_id)
-      VALUES (temp_transaction.sender_id, temp_transaction.id, sender_hold_amount,
-              arg_request_id)
-      RETURNING * INTO temp_hold;
-      result.hold_id = temp_hold.id;
+        INSERT INTO hold (account_id, transaction_id, amount, request_id)
+        VALUES (temp_transaction.sender_id, temp_transaction.id, sender_hold_amount,
+                arg_request_id)
+        RETURNING * INTO temp_hold;
+        result.hold_id = temp_hold.id;
     END IF;
-    
+
     UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
     UPDATE account SET user_id = receiver_account.user_id WHERE id = receiver_account.id;
 
@@ -828,22 +853,22 @@ ALTER TABLE public.schema_migrations OWNER TO postgres;
 --
 
 COPY public.account (id, portfolio_id, user_id, currency, created_at) FROM stdin;
-b72d0e55-f53a-4db0-897e-2ce4a73cb94b	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	116bde43-7733-43a1-a85a-fc8627e6da8e	USD	2022-10-18 14:54:43.491+00
-c4d0e14e-1b2b-4023-afa6-8891ad1960c9	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	433c0c15-0a44-49c4-a207-4501bb11f48c	USD	2022-10-18 14:54:43.491+00
-0adbb104-fc18-46ca-a4eb-beee7775eb69	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	USD	2022-10-18 14:54:43.491+00
-af271fce-c63c-4d79-af50-dcded9f806a4	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	ETH	2022-10-18 14:54:43.491+00
-b6fc22c2-84b6-4018-8619-93db67d5bb1f	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	SOL	2022-10-18 14:54:43.491+00
-67655fcb-c375-408d-975d-b5ab346de3bb	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	BTC	2022-10-18 14:54:43.491+00
-a76fbcd5-d436-4e00-9e4f-40cd4cf68c2a	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	ADA	2022-10-18 14:54:43.491+00
-cfc27886-e5ac-4183-949a-cfcf183b8258	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	MATIC	2022-10-18 14:54:43.491+00
-de2d4e35-8018-43d1-a29a-8fcfd42ddaf2	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	ATOM	2022-10-18 14:54:43.491+00
-8e2ee8eb-2057-4996-8d32-9eef6a6ab824	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	USD	2022-10-18 14:54:43.491+00
-63b1016e-e62b-4f71-94bb-94d399576ac7	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	ETH	2022-10-18 14:54:43.491+00
-4ee7c378-345d-4451-8b4b-ecd89eb929be	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	SOL	2022-10-18 14:54:43.491+00
-ae4a10aa-9f30-4b43-92bb-a5788d40e565	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	BTC	2022-10-18 14:54:43.491+00
-744d2936-2b30-4f50-a555-f19c71a3264f	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	ADA	2022-10-18 14:54:43.491+00
-71838256-a3df-4838-93f3-134eb94382dc	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	MATIC	2022-10-18 14:54:43.491+00
-96cb37f3-69ce-44ad-aeec-c38a770e79ff	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	ATOM	2022-10-18 14:54:43.491+00
+b72d0e55-f53a-4db0-897e-2ce4a73cb94b	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	116bde43-7733-43a1-a85a-fc8627e6da8e	USD	2022-10-18 15:43:07.351+00
+c4d0e14e-1b2b-4023-afa6-8891ad1960c9	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	433c0c15-0a44-49c4-a207-4501bb11f48c	USD	2022-10-18 15:43:07.351+00
+0adbb104-fc18-46ca-a4eb-beee7775eb69	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	USD	2022-10-18 15:43:07.351+00
+f47f54b5-203d-464c-a308-a7de657b6be2	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	ETH	2022-10-18 15:43:07.351+00
+c95f4e38-13e7-40ad-b1f6-80342ad0edd1	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	SOL	2022-10-18 15:43:07.351+00
+dc8e8ccd-da82-4786-8b52-61c0f8d4c55d	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	BTC	2022-10-18 15:43:07.351+00
+c93c4764-3510-40a2-a5c9-f529422fb8e2	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	ADA	2022-10-18 15:43:07.351+00
+850bf0d7-34e2-4ce2-82c7-10030bb773a6	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	MATIC	2022-10-18 15:43:07.351+00
+79b60f53-9f06-4e96-bcbe-f8b76d14c523	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	ATOM	2022-10-18 15:43:07.351+00
+8e2ee8eb-2057-4996-8d32-9eef6a6ab824	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	USD	2022-10-18 15:43:07.351+00
+81899bbb-4cd4-4052-ae87-84b5737c3b3a	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	ETH	2022-10-18 15:43:07.351+00
+1edcb251-9671-481b-a38b-71304d0c6ef7	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	SOL	2022-10-18 15:43:07.351+00
+6ca094c1-67b4-4832-bc9f-f7cd6dca384e	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	BTC	2022-10-18 15:43:07.351+00
+7e2a6869-9237-4d9e-82d0-1ae425851bda	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	ADA	2022-10-18 15:43:07.351+00
+37401198-914d-4d82-9c57-6bebf883a443	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	MATIC	2022-10-18 15:43:07.351+00
+36806f84-0b12-4ae6-885e-8c6d4b15462a	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	ATOM	2022-10-18 15:43:07.351+00
 \.
 
 
@@ -852,20 +877,20 @@ ae4a10aa-9f30-4b43-92bb-a5788d40e565	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23
 --
 
 COPY public.account_balance (id, account_id, balance, hold, available, created_at, request_id, count) FROM stdin;
-d170ce3e-cae7-4e48-87df-5b51bda2474f	0adbb104-fc18-46ca-a4eb-beee7775eb69	10000	0	10000	2022-10-18 14:54:43.491+00	\N	1
-c81ade5d-6e5e-44d0-80c9-87ae403644ac	af271fce-c63c-4d79-af50-dcded9f806a4	0	0	0	2022-10-18 14:54:43.491+00	\N	1
-23d65705-3af2-4a07-8543-b8249d5715b6	b6fc22c2-84b6-4018-8619-93db67d5bb1f	0	0	0	2022-10-18 14:54:43.491+00	\N	1
-683c2cc0-f829-4605-a033-327ceb042ac5	67655fcb-c375-408d-975d-b5ab346de3bb	0	0	0	2022-10-18 14:54:43.491+00	\N	1
-7daecb6c-5995-43f0-9d3d-07a6b4ec6b72	a76fbcd5-d436-4e00-9e4f-40cd4cf68c2a	0	0	0	2022-10-18 14:54:43.491+00	\N	1
-bb4478a4-673a-4d73-aace-bfa0876db33a	cfc27886-e5ac-4183-949a-cfcf183b8258	0	0	0	2022-10-18 14:54:43.491+00	\N	1
-06b6846c-6579-41f5-b6e2-3caf85a28b35	de2d4e35-8018-43d1-a29a-8fcfd42ddaf2	0	0	0	2022-10-18 14:54:43.491+00	\N	1
-0d63ab7f-ecf0-4604-a7a6-82dfc5458afd	8e2ee8eb-2057-4996-8d32-9eef6a6ab824	10000	0	10000	2022-10-18 14:54:43.491+00	\N	0
-fe740d41-44ae-4e05-b80a-55bd1affc0dd	63b1016e-e62b-4f71-94bb-94d399576ac7	0	0	0	2022-10-18 14:54:43.491+00	\N	1
-933f5347-968c-4d64-95ff-e0d83a1b3847	4ee7c378-345d-4451-8b4b-ecd89eb929be	0	0	0	2022-10-18 14:54:43.491+00	\N	1
-cd12d369-aab8-4ed0-aa97-3a3d6c3555cf	ae4a10aa-9f30-4b43-92bb-a5788d40e565	0	0	0	2022-10-18 14:54:43.491+00	\N	1
-21fc0067-73b1-4534-8164-747007ebe8f4	744d2936-2b30-4f50-a555-f19c71a3264f	0	0	0	2022-10-18 14:54:43.491+00	\N	1
-c91f2188-f96e-4683-913f-e12412015dac	71838256-a3df-4838-93f3-134eb94382dc	0	0	0	2022-10-18 14:54:43.491+00	\N	1
-0e879393-ed82-4200-80b8-ef45a4cd3c52	96cb37f3-69ce-44ad-aeec-c38a770e79ff	0	0	0	2022-10-18 14:54:43.491+00	\N	1
+96d9dec4-a8de-45c6-8a78-08a92343b5ba	0adbb104-fc18-46ca-a4eb-beee7775eb69	10000	0	10000	2022-10-18 15:43:07.351+00	\N	1
+09efd579-fd33-4e74-9572-79ed20789fd4	f47f54b5-203d-464c-a308-a7de657b6be2	0	0	0	2022-10-18 15:43:07.351+00	\N	1
+561c2c15-cd23-4b0b-aa8b-d76e9f33ae57	c95f4e38-13e7-40ad-b1f6-80342ad0edd1	0	0	0	2022-10-18 15:43:07.351+00	\N	1
+20fe5d59-d0ad-4a18-91db-e181e6695133	dc8e8ccd-da82-4786-8b52-61c0f8d4c55d	0	0	0	2022-10-18 15:43:07.351+00	\N	1
+f6bcecb9-bce6-4fd3-9cd4-27c36d9bdb09	c93c4764-3510-40a2-a5c9-f529422fb8e2	0	0	0	2022-10-18 15:43:07.351+00	\N	1
+51da22b5-12b4-419a-8338-011aeaac7862	850bf0d7-34e2-4ce2-82c7-10030bb773a6	0	0	0	2022-10-18 15:43:07.351+00	\N	1
+731aabc2-b9e4-4f30-a653-c48d7fdfd96e	79b60f53-9f06-4e96-bcbe-f8b76d14c523	0	0	0	2022-10-18 15:43:07.351+00	\N	1
+ac0bd94f-b52e-4bf5-a8ca-9656115b2cad	8e2ee8eb-2057-4996-8d32-9eef6a6ab824	10000	0	10000	2022-10-18 15:43:07.351+00	\N	0
+0949e8d7-50f9-43a8-a7a1-333adea261dc	81899bbb-4cd4-4052-ae87-84b5737c3b3a	0	0	0	2022-10-18 15:43:07.351+00	\N	1
+3accf3b6-8978-476d-b853-7d2b2a34695a	1edcb251-9671-481b-a38b-71304d0c6ef7	0	0	0	2022-10-18 15:43:07.351+00	\N	1
+5bd6ba0a-22b5-418f-90fc-0eea7cf69e1f	6ca094c1-67b4-4832-bc9f-f7cd6dca384e	0	0	0	2022-10-18 15:43:07.351+00	\N	1
+e3eb96d2-0c57-42b8-b940-98fc68cfc844	7e2a6869-9237-4d9e-82d0-1ae425851bda	0	0	0	2022-10-18 15:43:07.351+00	\N	1
+18af71d2-c3e1-428b-96d0-3bc394061358	37401198-914d-4d82-9c57-6bebf883a443	0	0	0	2022-10-18 15:43:07.351+00	\N	1
+1f95f7fc-6fff-4db0-ac80-9798e00d1102	36806f84-0b12-4ae6-885e-8c6d4b15462a	0	0	0	2022-10-18 15:43:07.351+00	\N	1
 \.
 
 
@@ -906,7 +931,7 @@ COPY public.released_hold (hold_id, released_at, request_id) FROM stdin;
 --
 
 COPY public.schema_migrations (version, dirty) FROM stdin;
-14	f
+16	f
 \.
 
 
