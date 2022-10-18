@@ -32,9 +32,9 @@ CREATE TABLE IF NOT EXISTS account_balance
 (
     id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     account_id UUID                           NOT NULL REFERENCES account (id),
-    balance    NUMERIC          DEFAULT 0 NOT NULL CHECK (balance >= 0),
-    hold       NUMERIC          DEFAULT 0 NOT NULL CHECK (hold >= 0),
-    available  NUMERIC          DEFAULT 0 NOT NULL CHECK (available >= 0),
+    balance    NUMERIC          DEFAULT 0     NOT NULL CHECK (balance >= 0),
+    hold       NUMERIC          DEFAULT 0     NOT NULL CHECK (hold >= 0),
+    available  NUMERIC          DEFAULT 0     NOT NULL CHECK (available >= 0),
     created_at TIMESTAMPTZ(3)   DEFAULT NOW() NOT NULL,
     request_id UUID,
     count      NUMERIC          DEFAULT 1     NOT NULL
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS entry
     account_id     UUID                           NOT NULL REFERENCES account (id),
     transaction_id UUID                           NOT NULL REFERENCES transaction (id),
     request_id     UUID                           NOT NULL,
-    amount         NUMERIC NOT NULL CHECK (amount > 0),
+    amount         NUMERIC                        NOT NULL CHECK (amount > 0),
     direction      DIRECTION                      NOT NULL,
     created_at     TIMESTAMPTZ(3)   DEFAULT NOW() NOT NULL
 );
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS hold
     account_id     UUID                           NOT NULL REFERENCES account (id),
     transaction_id UUID                           NOT NULL REFERENCES transaction (id),
     request_id     UUID                           NOT NULL,
-    amount         NUMERIC NOT NULL CHECK (amount > 0),
+    amount         NUMERIC                        NOT NULL CHECK (amount > 0),
     created_at     TIMESTAMPTZ(3)   DEFAULT NOW() NOT NULL
 );
 

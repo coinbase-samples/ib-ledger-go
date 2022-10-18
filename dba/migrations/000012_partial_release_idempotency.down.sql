@@ -109,7 +109,8 @@ BEGIN
     END IF;
 
     --Insert Sender Balance
-    temp_balance_amount = most_recent_sender_balance.balance - arg_sender_amount - arg_venue_fee_amount - arg_retail_fee_amount;
+    temp_balance_amount =
+                most_recent_sender_balance.balance - arg_sender_amount - arg_venue_fee_amount - arg_retail_fee_amount;
     sender_hold_amount = temp_hold.amount - arg_sender_amount - arg_retail_fee_amount - arg_venue_fee_amount;
     INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
     VALUES (temp_transaction.sender_id, arg_request_id, temp_balance_amount, sender_hold_amount,
@@ -134,13 +135,13 @@ BEGIN
 
     --Insert New Hold if needed
     IF sender_hold_amount > 0 THEN
-      INSERT INTO hold (account_id, transaction_id, amount, request_id)
-      VALUES (temp_transaction.sender_id, temp_transaction.id, sender_hold_amount,
-              arg_request_id)
-      RETURNING * INTO temp_hold;
-      result.hold_id = temp_hold.id;
+        INSERT INTO hold (account_id, transaction_id, amount, request_id)
+        VALUES (temp_transaction.sender_id, temp_transaction.id, sender_hold_amount,
+                arg_request_id)
+        RETURNING * INTO temp_hold;
+        result.hold_id = temp_hold.id;
     END IF;
-    
+
     UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
     UPDATE account SET user_id = receiver_account.user_id WHERE id = receiver_account.id;
 

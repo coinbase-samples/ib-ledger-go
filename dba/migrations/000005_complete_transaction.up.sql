@@ -27,10 +27,10 @@ CREATE OR REPLACE FUNCTION complete_transaction(
 AS
 $$
 DECLARE
-    temp_transaction      transaction;
-    temp_hold             hold;
-    sender_account        account;
-    receiver_account      account;
+    temp_transaction             transaction;
+    temp_hold                    hold;
+    sender_account               account;
+    receiver_account             account;
     most_recent_sender_balance   account_balance;
     most_recent_receiver_balance account_balance;
     temp_balance_amount          NUMERIC;
@@ -39,7 +39,7 @@ DECLARE
     receiver_entry_id            UUID;
     sender_balance_id            UUID;
     receiver_balance_id          UUID;
-    result                transaction_result;
+    result                       transaction_result;
 BEGIN
     SELECT *
     FROM transaction
@@ -73,19 +73,20 @@ BEGIN
     --Release the hold
     INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
 
-   --Get most recent sender balance
+    --Get most recent sender balance
     SELECT * FROM get_latest_balance(temp_transaction.sender_id) INTO most_recent_sender_balance;
 
     --Insert Sender Entry for Amount Sent to Receiver
     INSERT INTO entry (account_id, transaction_id, amount, direction, request_id)
-    VALUES (temp_transaction.sender_id, arg_transaction_id, temp_hold.amount - arg_venue_fee_amount - arg_retail_fee_amount, 'DEBIT', arg_request_id)
+    VALUES (temp_transaction.sender_id, arg_transaction_id,
+            temp_hold.amount - arg_venue_fee_amount - arg_retail_fee_amount, 'DEBIT', arg_request_id)
     RETURNING id INTO sender_entry_id;
     result.sender_entry_id = sender_entry_id;
 
     --Insert Sender Entry for Fee if Fee Paid
     IF arg_venue_fee_amount != 0 THEN
         INSERT INTO entry (account_id, transaction_id, amount, direction, request_id)
-        VALUES (temp_transaction.sender_id, arg_transaction_id,  arg_venue_fee_amount, 'DEBIT', arg_request_id);
+        VALUES (temp_transaction.sender_id, arg_transaction_id, arg_venue_fee_amount, 'DEBIT', arg_request_id);
         INSERT INTO entry (account_id, transaction_id, amount, direction, request_id)
         VALUES (arg_venue_fee_account_id, arg_transaction_id, arg_venue_fee_amount, 'CREDIT', arg_request_id);
     END IF;
