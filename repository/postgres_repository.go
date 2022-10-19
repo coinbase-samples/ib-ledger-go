@@ -170,7 +170,7 @@ func (handler *PostgresRepository) PartialReleaseHold(ctx context.Context, reque
 func (handler *PostgresRepository) CompleteTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
 
-	const sql = `SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id FROM complete_transaction($1, $2, $3, $4, $5, $6, $7)`
+	const sql = `SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id FROM complete_transaction($1, $2)`
 
 	err := pgxscan.Select(
 		context.Background(),
