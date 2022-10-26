@@ -25,13 +25,27 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func main() {
 	ctx := context.Background()
 
-	ledgerClient := NewLedgerServiceClient("localhost:8445")
+	md := metadata.New(map[string]string{"x-route-id": "ledger"})
+
+	conn, err := grpc.DialContext(
+		metadata.NewOutgoingContext(context.TODO(), md),
+		"localhost:8445",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+
+    if err != nil {
+        log.Print(err)
+        log.Fatalf("unable to generate ledger connection")
+    }
+
+    ledgerClient := ledger.NewLedgerClient(conn)
 
 	transactionRes, err := ledgerClient.CreateTransaction(ctx, &ledger.CreateTransactionRequest{
 		OrderId: "456B4BF7-D975-4AED-B0F0-33FC1666F69B",
