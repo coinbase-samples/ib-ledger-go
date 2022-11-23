@@ -15,3 +15,5 @@
  */
 
 DROP FUNCTION complete_transaction;
+DROP FUNCTION cancel_transaction;
+DROP FUNCTION fail_transaction;

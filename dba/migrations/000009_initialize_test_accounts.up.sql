@@ -14,21 +14,6 @@
  * limitations under the License.
  */
 
-DELETE
-FROM released_hold;
-DELETE
-FROM hold;
-DELETE
-FROM entry;
-DELETE
-FROM finalized_transaction;
-DELETE
-FROM transaction;
-DELETE
-FROM account_balance;
-DELETE
-FROM account;
-
 /*
  * Neoworks Fee Accounts
 */
@@ -49,28 +34,28 @@ VALUES ('C4D0E14E-1B2B-4023-AFA6-8891AD1960C9', 'D263E7E3-24D7-4C04-8D67-EA3A0BE
 
 INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
 VALUES ('0adbb104-fc18-46ca-a4eb-beee7775eb69', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        'c5af3271-7185-4a52-9d0c-1c4b418317d8', 'USD', now());
+        '37d10e18-34a2-4bd2-b7bc-b8e6dd6358f1', 'USD', now());
 
 INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
 VALUES ('0adbb104-fc18-46ca-a4eb-beee7775eb69', 10000, 0, 10000, now(), null, 1);
 
 SELECT *
-FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', 'c5af3271-7185-4a52-9d0c-1c4b418317d8', 'ETH');
+FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '37d10e18-34a2-4bd2-b7bc-b8e6dd6358f1', 'ETH');
 
 SELECT *
-FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', 'c5af3271-7185-4a52-9d0c-1c4b418317d8', 'SOL');
+FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '37d10e18-34a2-4bd2-b7bc-b8e6dd6358f1', 'SOL');
 
 SELECT *
-FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', 'c5af3271-7185-4a52-9d0c-1c4b418317d8', 'BTC');
+FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '37d10e18-34a2-4bd2-b7bc-b8e6dd6358f1', 'BTC');
 
 SELECT *
-FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', 'c5af3271-7185-4a52-9d0c-1c4b418317d8', 'ADA');
+FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '37d10e18-34a2-4bd2-b7bc-b8e6dd6358f1', 'ADA');
 
 SELECT *
-FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', 'c5af3271-7185-4a52-9d0c-1c4b418317d8', 'MATIC');
+FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '37d10e18-34a2-4bd2-b7bc-b8e6dd6358f1', 'MATIC');
 
 SELECT *
-FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', 'c5af3271-7185-4a52-9d0c-1c4b418317d8', 'ATOM');
+FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '37d10e18-34a2-4bd2-b7bc-b8e6dd6358f1', 'ATOM');
 
 /*
  * Demo1 Accounts
@@ -78,25 +63,25 @@ FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', 'c5af3271-7185-4
 
 INSERT INTO account (id, portfolio_id, user_id, currency, created_at)
 VALUES ('8e2ee8eb-2057-4996-8d32-9eef6a6ab824', 'D263E7E3-24D7-4C04-8D67-EA3A0BE7907E',
-        '36ae23e7-d79e-4901-89d5-3fa87cca1abf', 'USD', now());
+        '6a56c92e-10f5-4f05-9f3f-414cc98c7292', 'USD', now());
 
 INSERT INTO account_balance(account_id, balance, hold, available, created_at, request_id, count)
 VALUES ('8e2ee8eb-2057-4996-8d32-9eef6a6ab824', 10000, 0, 10000, now(), null, 0);
 
 SELECT *
-FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '36ae23e7-d79e-4901-89d5-3fa87cca1abf', 'ETH');
+FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '6a56c92e-10f5-4f05-9f3f-414cc98c7292', 'ETH');
 
 SELECT *
-FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '36ae23e7-d79e-4901-89d5-3fa87cca1abf', 'SOL');
+FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '6a56c92e-10f5-4f05-9f3f-414cc98c7292', 'SOL');
 
 SELECT *
-FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '36ae23e7-d79e-4901-89d5-3fa87cca1abf', 'BTC');
+FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '6a56c92e-10f5-4f05-9f3f-414cc98c7292', 'BTC');
 
 SELECT *
-FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '36ae23e7-d79e-4901-89d5-3fa87cca1abf', 'ADA');
+FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '6a56c92e-10f5-4f05-9f3f-414cc98c7292', 'ADA');
 
 SELECT *
-FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '36ae23e7-d79e-4901-89d5-3fa87cca1abf', 'MATIC');
+FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '6a56c92e-10f5-4f05-9f3f-414cc98c7292', 'MATIC');
 
 SELECT *
-FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '36ae23e7-d79e-4901-89d5-3fa87cca1abf', 'ATOM');
+FROM initialize_account('D263E7E3-24D7-4C04-8D67-EA3A0BE7907E', '6a56c92e-10f5-4f05-9f3f-414cc98c7292', 'ATOM');

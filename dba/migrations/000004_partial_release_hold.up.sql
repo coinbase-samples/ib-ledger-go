@@ -82,35 +82,27 @@ BEGIN
     IF NOT FOUND THEN
         RAISE EXCEPTION 'transaction not found';
     end if;
-    --idempotency
-    SELECT * FROM hold WHERE request_id = arg_request_id into temp_hold;
-    if FOUND THEN
-        result.hold_id = temp_hold.id;
-        result.sender_entry_id = (SELECT id
-                                  FROM entry
-                                  where transaction_id = arg_transaction_id
-                                    AND request_id = arg_request_id
-                                    AND account_id = temp_transaction.sender_id);
-        result.receiver_entry_id = (SELECT *
-                                    FROM entry
-                                    where transaction_id = arg_transaction_id
-                                      AND request_id = arg_request_id
-                                      AND account_id = temp_transaction.receiver_id);
-        result.sender_balance_id = (SELECT id
-                                    FROM account_balance
-                                    WHERE request_id = arg_request_id
-                                      AND account_id = temp_transaction.sender_id);
-        result.receiver_balance_id = (SELECT id
-                                      FROM account_balance
-                                      WHERE request_id = arg_request_id
-                                        AND account_id = temp_transaction.receiver_id);
-        return result;
-    END IF;
 
     --Locking
     LOCK TABLE account IN ROW EXCLUSIVE MODE;
     SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
     SELECT * FROM account WHERE id = temp_transaction.receiver_id into receiver_account FOR UPDATE;
+
+    --idempotency
+    PERFORM *
+    FROM entry
+    WHERE transaction_id = arg_transaction_id AND request_id = arg_request_id AND account_id = temp_transaction.sender_id;
+    if FOUND THEN
+        SELECT id
+        FROM entry
+        where transaction_id = arg_transaction_id
+          AND request_id = arg_request_id
+          AND account_id = temp_transaction.receiver_id
+        LIMIT 1
+        INTO receiver_entry_id;
+        result.receiver_entry_id = receiver_entry_id;
+        return result;
+    END IF;
 
     SELECT *
     FROM get_unreleased_hold(temp_transaction.id, temp_transaction.sender_id)
@@ -168,12 +160,14 @@ BEGIN
     RETURNING id INTO receiver_balance_id;
     result.receiver_balance_id = receiver_balance_id;
 
-    --Insert New Hold
-    INSERT INTO hold (account_id, transaction_id, amount, request_id)
-    VALUES (temp_transaction.sender_id, temp_transaction.id, sender_hold_amount,
-            arg_request_id)
-    RETURNING * INTO temp_hold;
-    result.hold_id = temp_hold.id;
+    --Insert New Hold if needed
+    IF sender_hold_amount > 0 THEN
+        INSERT INTO hold (account_id, transaction_id, amount, request_id)
+        VALUES (temp_transaction.sender_id, temp_transaction.id, sender_hold_amount,
+                arg_request_id)
+        RETURNING * INTO temp_hold;
+        result.hold_id = temp_hold.id;
+    END IF;
 
     UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
     UPDATE account SET user_id = receiver_account.user_id WHERE id = receiver_account.id;
