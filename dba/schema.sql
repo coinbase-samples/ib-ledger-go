@@ -651,7 +651,6 @@ CREATE FUNCTION public.partial_release_hold(arg_transaction_id uuid, arg_request
     AS $$
 DECLARE
     temp_transaction             transaction;
-    temp_sender_entry            entry;
     temp_hold                    hold;
     sender_account               account;
     most_recent_sender_balance   account_balance;
@@ -676,27 +675,18 @@ BEGIN
     SELECT * FROM account WHERE id = temp_transaction.receiver_id into receiver_account FOR UPDATE;
 
     --idempotency
-    SELECT *
+    PERFORM *
     FROM entry
-    WHERE transaction_id = arg_transaction_id
-      AND request_id = arg_request_id
-      AND account_id = temp_transaction.sender_id
-    into temp_sender_entry;
+    WHERE transaction_id = arg_transaction_id AND request_id = arg_request_id AND account_id = temp_transaction.sender_id;
     if FOUND THEN
-        result.sender_entry_id = temp_sender_entry.id;
-        result.receiver_entry_id = (SELECT *
-                                    FROM entry
-                                    where transaction_id = arg_transaction_id
-                                      AND request_id = arg_request_id
-                                      AND account_id = temp_transaction.receiver_id);
-        result.sender_balance_id = (SELECT id
-                                    FROM account_balance
-                                    WHERE request_id = arg_request_id
-                                      AND account_id = temp_transaction.sender_id);
-        result.receiver_balance_id = (SELECT id
-                                      FROM account_balance
-                                      WHERE request_id = arg_request_id
-                                        AND account_id = temp_transaction.receiver_id);
+        SELECT id
+        FROM entry
+        where transaction_id = arg_transaction_id
+          AND request_id = arg_request_id
+          AND account_id = temp_transaction.receiver_id 
+        LIMIT 1
+        INTO receiver_entry_id;
+        result.receiver_entry_id = receiver_entry_id;
         return result;
     END IF;
 
@@ -853,22 +843,22 @@ ALTER TABLE public.schema_migrations OWNER TO postgres;
 --
 
 COPY public.account (id, portfolio_id, user_id, currency, created_at) FROM stdin;
-b72d0e55-f53a-4db0-897e-2ce4a73cb94b	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	116bde43-7733-43a1-a85a-fc8627e6da8e	USD	2022-10-18 15:43:07.351+00
-c4d0e14e-1b2b-4023-afa6-8891ad1960c9	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	433c0c15-0a44-49c4-a207-4501bb11f48c	USD	2022-10-18 15:43:07.351+00
-0adbb104-fc18-46ca-a4eb-beee7775eb69	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	USD	2022-10-18 15:43:07.351+00
-f47f54b5-203d-464c-a308-a7de657b6be2	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	ETH	2022-10-18 15:43:07.351+00
-c95f4e38-13e7-40ad-b1f6-80342ad0edd1	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	SOL	2022-10-18 15:43:07.351+00
-dc8e8ccd-da82-4786-8b52-61c0f8d4c55d	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	BTC	2022-10-18 15:43:07.351+00
-c93c4764-3510-40a2-a5c9-f529422fb8e2	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	ADA	2022-10-18 15:43:07.351+00
-850bf0d7-34e2-4ce2-82c7-10030bb773a6	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	MATIC	2022-10-18 15:43:07.351+00
-79b60f53-9f06-4e96-bcbe-f8b76d14c523	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af3271-7185-4a52-9d0c-1c4b418317d8	ATOM	2022-10-18 15:43:07.351+00
-8e2ee8eb-2057-4996-8d32-9eef6a6ab824	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	USD	2022-10-18 15:43:07.351+00
-81899bbb-4cd4-4052-ae87-84b5737c3b3a	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	ETH	2022-10-18 15:43:07.351+00
-1edcb251-9671-481b-a38b-71304d0c6ef7	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	SOL	2022-10-18 15:43:07.351+00
-6ca094c1-67b4-4832-bc9f-f7cd6dca384e	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	BTC	2022-10-18 15:43:07.351+00
-7e2a6869-9237-4d9e-82d0-1ae425851bda	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	ADA	2022-10-18 15:43:07.351+00
-37401198-914d-4d82-9c57-6bebf883a443	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	MATIC	2022-10-18 15:43:07.351+00
-36806f84-0b12-4ae6-885e-8c6d4b15462a	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	36ae23e7-d79e-4901-89d5-3fa87cca1abf	ATOM	2022-10-18 15:43:07.351+00
+b72d0e55-f53a-4db0-897e-2ce4a73cb94b	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	116bde43-7733-43a1-a85a-fc8627e6da8e	USD	2022-11-23 16:36:40.709+00
+c4d0e14e-1b2b-4023-afa6-8891ad1960c9	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	433c0c15-0a44-49c4-a207-4501bb11f48c	USD	2022-11-23 16:36:40.709+00
+0adbb104-fc18-46ca-a4eb-beee7775eb69	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	37d10e18-34a2-4bd2-b7bc-b8e6dd6358f1	USD	2022-11-23 16:36:40.709+00
+ea74f7a2-b0e7-4d59-85a9-bc384d9e0b1f	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	37d10e18-34a2-4bd2-b7bc-b8e6dd6358f1	ETH	2022-11-23 16:36:40.709+00
+d59f747c-0c0b-4edd-8984-109ce2b89589	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	37d10e18-34a2-4bd2-b7bc-b8e6dd6358f1	SOL	2022-11-23 16:36:40.709+00
+8a6f322d-26ab-48d7-98f8-9471c0926cd7	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	37d10e18-34a2-4bd2-b7bc-b8e6dd6358f1	BTC	2022-11-23 16:36:40.709+00
+768ea6fc-b3ca-46ce-97b1-a5c6393a3f2f	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	37d10e18-34a2-4bd2-b7bc-b8e6dd6358f1	ADA	2022-11-23 16:36:40.709+00
+60cdfaf0-bc6a-4710-8600-4af3d4f50e14	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	37d10e18-34a2-4bd2-b7bc-b8e6dd6358f1	MATIC	2022-11-23 16:36:40.709+00
+d81b2e78-3c9d-4fa7-a727-396a8ca72358	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	37d10e18-34a2-4bd2-b7bc-b8e6dd6358f1	ATOM	2022-11-23 16:36:40.709+00
+8e2ee8eb-2057-4996-8d32-9eef6a6ab824	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	6a56c92e-10f5-4f05-9f3f-414cc98c7292	USD	2022-11-23 16:36:40.709+00
+d03b7d1d-99ed-41f8-a86b-1623c766ca6e	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	6a56c92e-10f5-4f05-9f3f-414cc98c7292	ETH	2022-11-23 16:36:40.709+00
+9de2d29d-8ccc-400b-8b2b-9e49e825bc4e	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	6a56c92e-10f5-4f05-9f3f-414cc98c7292	SOL	2022-11-23 16:36:40.709+00
+45342111-08c5-46cb-83ba-9686809497cd	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	6a56c92e-10f5-4f05-9f3f-414cc98c7292	BTC	2022-11-23 16:36:40.709+00
+17449cf3-f0ec-4be9-9028-b5670a544313	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	6a56c92e-10f5-4f05-9f3f-414cc98c7292	ADA	2022-11-23 16:36:40.709+00
+34c72777-dc80-4c92-860f-faee783a5dd5	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	6a56c92e-10f5-4f05-9f3f-414cc98c7292	MATIC	2022-11-23 16:36:40.709+00
+195bd6f6-8e01-4479-b2c4-3acb919858b4	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	6a56c92e-10f5-4f05-9f3f-414cc98c7292	ATOM	2022-11-23 16:36:40.709+00
 \.
 
 
@@ -877,20 +867,20 @@ c93c4764-3510-40a2-a5c9-f529422fb8e2	d263e7e3-24d7-4c04-8d67-ea3a0be7907e	c5af32
 --
 
 COPY public.account_balance (id, account_id, balance, hold, available, created_at, request_id, count) FROM stdin;
-96d9dec4-a8de-45c6-8a78-08a92343b5ba	0adbb104-fc18-46ca-a4eb-beee7775eb69	10000	0	10000	2022-10-18 15:43:07.351+00	\N	1
-09efd579-fd33-4e74-9572-79ed20789fd4	f47f54b5-203d-464c-a308-a7de657b6be2	0	0	0	2022-10-18 15:43:07.351+00	\N	1
-561c2c15-cd23-4b0b-aa8b-d76e9f33ae57	c95f4e38-13e7-40ad-b1f6-80342ad0edd1	0	0	0	2022-10-18 15:43:07.351+00	\N	1
-20fe5d59-d0ad-4a18-91db-e181e6695133	dc8e8ccd-da82-4786-8b52-61c0f8d4c55d	0	0	0	2022-10-18 15:43:07.351+00	\N	1
-f6bcecb9-bce6-4fd3-9cd4-27c36d9bdb09	c93c4764-3510-40a2-a5c9-f529422fb8e2	0	0	0	2022-10-18 15:43:07.351+00	\N	1
-51da22b5-12b4-419a-8338-011aeaac7862	850bf0d7-34e2-4ce2-82c7-10030bb773a6	0	0	0	2022-10-18 15:43:07.351+00	\N	1
-731aabc2-b9e4-4f30-a653-c48d7fdfd96e	79b60f53-9f06-4e96-bcbe-f8b76d14c523	0	0	0	2022-10-18 15:43:07.351+00	\N	1
-ac0bd94f-b52e-4bf5-a8ca-9656115b2cad	8e2ee8eb-2057-4996-8d32-9eef6a6ab824	10000	0	10000	2022-10-18 15:43:07.351+00	\N	0
-0949e8d7-50f9-43a8-a7a1-333adea261dc	81899bbb-4cd4-4052-ae87-84b5737c3b3a	0	0	0	2022-10-18 15:43:07.351+00	\N	1
-3accf3b6-8978-476d-b853-7d2b2a34695a	1edcb251-9671-481b-a38b-71304d0c6ef7	0	0	0	2022-10-18 15:43:07.351+00	\N	1
-5bd6ba0a-22b5-418f-90fc-0eea7cf69e1f	6ca094c1-67b4-4832-bc9f-f7cd6dca384e	0	0	0	2022-10-18 15:43:07.351+00	\N	1
-e3eb96d2-0c57-42b8-b940-98fc68cfc844	7e2a6869-9237-4d9e-82d0-1ae425851bda	0	0	0	2022-10-18 15:43:07.351+00	\N	1
-18af71d2-c3e1-428b-96d0-3bc394061358	37401198-914d-4d82-9c57-6bebf883a443	0	0	0	2022-10-18 15:43:07.351+00	\N	1
-1f95f7fc-6fff-4db0-ac80-9798e00d1102	36806f84-0b12-4ae6-885e-8c6d4b15462a	0	0	0	2022-10-18 15:43:07.351+00	\N	1
+55de8523-b3ef-45bf-b0cb-e27c41ad00ad	0adbb104-fc18-46ca-a4eb-beee7775eb69	10000	0	10000	2022-11-23 16:36:40.709+00	\N	1
+43195950-9bb1-4064-94a5-c04434ccd093	ea74f7a2-b0e7-4d59-85a9-bc384d9e0b1f	0	0	0	2022-11-23 16:36:40.709+00	\N	1
+45842fab-5b23-4df7-b33f-16ea934f2894	d59f747c-0c0b-4edd-8984-109ce2b89589	0	0	0	2022-11-23 16:36:40.709+00	\N	1
+8728d204-45da-4acb-a7cc-14c4a10913cb	8a6f322d-26ab-48d7-98f8-9471c0926cd7	0	0	0	2022-11-23 16:36:40.709+00	\N	1
+f2d6312c-768d-4472-9004-4c525a4da2d0	768ea6fc-b3ca-46ce-97b1-a5c6393a3f2f	0	0	0	2022-11-23 16:36:40.709+00	\N	1
+12354d6a-b93b-4a2e-b19b-8f731f7ea96b	60cdfaf0-bc6a-4710-8600-4af3d4f50e14	0	0	0	2022-11-23 16:36:40.709+00	\N	1
+e9c5f1b7-91a0-43e8-9dfd-3d86601cce09	d81b2e78-3c9d-4fa7-a727-396a8ca72358	0	0	0	2022-11-23 16:36:40.709+00	\N	1
+a86863b4-2362-4472-b499-385fb51ffdaa	8e2ee8eb-2057-4996-8d32-9eef6a6ab824	10000	0	10000	2022-11-23 16:36:40.709+00	\N	0
+8474939c-f7d8-4143-b79a-c91ed7bb764c	d03b7d1d-99ed-41f8-a86b-1623c766ca6e	0	0	0	2022-11-23 16:36:40.709+00	\N	1
+c00da6c5-8f94-4f12-b872-4d5dfb27720c	9de2d29d-8ccc-400b-8b2b-9e49e825bc4e	0	0	0	2022-11-23 16:36:40.709+00	\N	1
+264f9a39-9ad9-4141-a52f-45b04b5120e3	45342111-08c5-46cb-83ba-9686809497cd	0	0	0	2022-11-23 16:36:40.709+00	\N	1
+7393d4c9-8311-4e63-adac-fd49c6c9b910	17449cf3-f0ec-4be9-9028-b5670a544313	0	0	0	2022-11-23 16:36:40.709+00	\N	1
+5afd756a-40fd-4e7a-b6e6-7a9701b22fcb	34c72777-dc80-4c92-860f-faee783a5dd5	0	0	0	2022-11-23 16:36:40.709+00	\N	1
+7c84c146-3279-4324-9330-679e4e9da99a	195bd6f6-8e01-4479-b2c4-3acb919858b4	0	0	0	2022-11-23 16:36:40.709+00	\N	1
 \.
 
 
@@ -931,7 +921,7 @@ COPY public.released_hold (hold_id, released_at, request_id) FROM stdin;
 --
 
 COPY public.schema_migrations (version, dirty) FROM stdin;
-16	f
+26	f
 \.
 
 
