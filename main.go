@@ -31,8 +31,6 @@ import (
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
@@ -51,9 +49,6 @@ func main() {
 	config.Setup(&app)
 	log.Println("starting app with config", app)
 
-	tracer := otel.Tracer("ib-ledger-go")
-
-	//setup otel
 	tp, err := config.Init(app)
 
 	if err != nil {
@@ -94,7 +89,6 @@ func main() {
 		server = grpc.NewServer(
 			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 				grpc_ctxtags.UnaryServerInterceptor(),
-				otelgrpc.UnaryServerInterceptor(),
 				grpc_logrus.UnaryServerInterceptor(logrusEntry, opts...),
 				//aw.InterceptorNew(),
 				grpc_validator.UnaryServerInterceptor(),
@@ -110,7 +104,6 @@ func main() {
 		server = grpc.NewServer(
 			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 				grpc_ctxtags.UnaryServerInterceptor(),
-				otelgrpc.UnaryServerInterceptor(),
 				grpc_logrus.UnaryServerInterceptor(logrusEntry, opts...),
 				// aw.InterceptorNew(),
 				grpc_validator.UnaryServerInterceptor(),
