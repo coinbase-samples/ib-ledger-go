@@ -19,7 +19,7 @@ package repository
 import (
 	"context"
 
-	"github.com/coinbase-samples/ib-ledger-go/model"
+	"github.com/coinbase-samples/ib-ledger-go/internal/model"
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 )
 

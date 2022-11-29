@@ -17,16 +17,15 @@
 package service
 
 import (
-	"context"
-
-	"github.com/coinbase-samples/ib-ledger-go/model"
-
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
+	"github.com/coinbase-samples/ib-ledger-go/internal/repository"
 )
 
-type TestPostgres struct {
+type Service struct {
+	api.UnimplementedLedgerServer
+	Repository repository.Repository
 }
 
-func (tp TestPostgres) InitializeAccount(ctx context.Context, request *api.InitializeAccountRequest) (*model.InitializeAccountResult, error) {
-	return &model.InitializeAccountResult{}, nil
+func NewService(rep repository.Repository) *Service {
+	return &Service{Repository: rep}
 }

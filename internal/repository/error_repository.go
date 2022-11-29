@@ -20,7 +20,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/coinbase-samples/ib-ledger-go/model"
+	"github.com/coinbase-samples/ib-ledger-go/internal/model"
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 	"github.com/jackc/pgx/v5/pgconn"
 	log "github.com/sirupsen/logrus"

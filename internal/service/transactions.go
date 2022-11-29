@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
-	"github.com/coinbase-samples/ib-ledger-go/utils"
+	"github.com/coinbase-samples/ib-ledger-go/internal/utils"
 
 	log "github.com/sirupsen/logrus"
 

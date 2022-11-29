@@ -23,9 +23,9 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/coinbase-samples/ib-ledger-go/config"
-	"github.com/coinbase-samples/ib-ledger-go/model"
-	"github.com/coinbase-samples/ib-ledger-go/utils"
+	"github.com/coinbase-samples/ib-ledger-go/internal/config"
+	"github.com/coinbase-samples/ib-ledger-go/internal/model"
+	"github.com/coinbase-samples/ib-ledger-go/internal/utils"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
 
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
