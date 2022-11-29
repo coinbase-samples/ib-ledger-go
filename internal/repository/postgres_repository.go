@@ -19,6 +19,7 @@ package repository
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -31,6 +32,7 @@ import (
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	log "github.com/sirupsen/logrus"
 )
@@ -79,13 +81,30 @@ func NewPostgresHandler(app config.AppConfig) *PostgresRepository {
 	return &PostgresRepository{Pool: pool}
 }
 
+func (r *PostgresRepository) handleErrors(err error) error {
+	var pgErr *pgconn.PgError
+
+	if errors.As(err, &pgErr) {
+		msg := pgErr.Message
+		log.Errorf("postgres error - code: %v - message: %v", pgErr.SQLState(), msg)
+		if msg == "insufficient available balance" {
+			return errors.New("insufficient balance for transaction")
+		} else if msg == "sender account missing" || msg == "receiver account missing" {
+			return errors.New("account not found")
+		} else {
+			return errors.New("postgres internal failure")
+		}
+	}
+	return err
+}
+
 func (handler *PostgresRepository) InitializeAccount(ctx context.Context, request *api.InitializeAccountRequest) (*model.InitializeAccountResult, error) {
 	var initializeAccountResult []*model.InitializeAccountResult
 	const sql = `SELECT id, portfolio_id, user_id, currency, created_at, balance, hold, available FROM initialize_account($1, $2, $3)`
 
 	err := pgxscan.Select(context.Background(), handler.Pool, &initializeAccountResult, sql, request.PortfolioId, request.UserId, request.Currency)
 	if err != nil {
-		return nil, err
+		return nil, handler.handleErrors(err)
 	}
 
 	return initializeAccountResult[0], nil
@@ -120,7 +139,7 @@ func (handler *PostgresRepository) CreateTransaction(ctx context.Context, reques
 		totalAmountInt,
 		transactionType)
 	if err != nil {
-		return nil, err
+		return nil, handler.handleErrors(err)
 	}
 
 	return createTransactionResult[0], nil
@@ -161,7 +180,7 @@ func (handler *PostgresRepository) PartialReleaseHold(ctx context.Context, reque
 		venueFeeAmount,
 		venueAccountId)
 	if err != nil {
-		return nil, err
+		return nil, handler.handleErrors(err)
 	}
 
 	return TransactionResult[0], nil
@@ -180,7 +199,7 @@ func (handler *PostgresRepository) CompleteTransaction(ctx context.Context, requ
 		request.OrderId,
 		request.RequestId)
 	if err != nil {
-		return nil, err
+		return nil, handler.handleErrors(err)
 	}
 
 	return TransactionResult[0], nil
@@ -193,7 +212,7 @@ func (handler *PostgresRepository) FailTransaction(ctx context.Context, request 
 
 	err := pgxscan.Select(context.Background(), handler.Pool, &TransactionResult, sql, request.OrderId, request.RequestId)
 	if err != nil {
-		return nil, err
+		return nil, handler.handleErrors(err)
 	}
 
 	return TransactionResult[0], nil
@@ -206,7 +225,7 @@ func (handler *PostgresRepository) CancelTransaction(ctx context.Context, reques
 
 	err := pgxscan.Select(context.Background(), handler.Pool, &TransactionResult, sql, request.OrderId, request.RequestId)
 	if err != nil {
-		return nil, err
+		return nil, handler.handleErrors(err)
 	}
 
 	return TransactionResult[0], nil
@@ -221,7 +240,7 @@ func (handler *PostgresRepository) GetAllAccountsAndMostRecentBalances(ctx conte
 	err := pgxscan.Select(context.Background(), handler.Pool, &accountResult, sql, userId)
 	if err != nil {
 		l.Debugln("error getting accounts", err)
-		return nil, err
+		return nil, handler.handleErrors(err)
 	}
 	l.Debugln("fetched accounts and balances", accountResult)
 	return accountResult, nil

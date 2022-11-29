@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
-	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 	"github.com/coinbase-samples/ib-ledger-go/internal/utils"
+	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 
 	log "github.com/sirupsen/logrus"
 

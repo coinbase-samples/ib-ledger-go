@@ -40,12 +40,12 @@ func main() {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 
-    if err != nil {
-        log.Print(err)
-        log.Fatalf("unable to generate ledger connection")
-    }
+	if err != nil {
+		log.Print(err)
+		log.Fatalf("unable to generate ledger connection")
+	}
 
-    ledgerClient := ledger.NewLedgerClient(conn)
+	ledgerClient := ledger.NewLedgerClient(conn)
 
 	transactionRes, err := ledgerClient.CreateTransaction(ctx, &ledger.CreateTransactionRequest{
 		OrderId: "456B4BF7-D975-4AED-B0F0-33FC1666F69B",

@@ -107,8 +107,7 @@ func main() {
 	grpc_health_v1.RegisterHealthServer(server, healthServer)
 
 	// Setup application service
-	dba := repository.NewPostgresHandler(app)
-    rep := repository.NewErrorRepository(dba)
+	rep := repository.NewPostgresHandler(app)
 	service := service.NewService(rep)
 
 	api.RegisterLedgerServer(server, service)
