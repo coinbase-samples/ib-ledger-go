@@ -17,7 +17,6 @@
 package main
 
 import (
-	"context"
 	"crypto/tls"
 	"fmt"
 	"net"
@@ -49,24 +48,12 @@ func main() {
 	config.Setup(&app)
 	log.Println("starting app with config", app)
 
-	tp, err := config.Init(app)
-
-	if err != nil {
-		log.Fatalln("Failed to configure env variables: %v", err)
-	}
-
 	if app.Env == "" {
 		log.Fatalln("no environment name set")
 	}
 
 	logLevel, _ := log.ParseLevel(app.LogLevel)
 	log.SetLevel(logLevel)
-
-	defer func() {
-		if err := tp.Shutdown(context.Background()); err != nil {
-			log.Warnf("Error shutting down tracer provider: %v", err)
-		}
-	}()
 
 	//setup conn
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", app.Port))
@@ -121,7 +108,8 @@ func main() {
 
 	// Setup application service
 	dba := repository.NewPostgresHandler(app)
-	service := service.NewService(dba, tracer)
+    rep := repository.NewErrorRepository(dba)
+	service := service.NewService(rep)
 
 	api.RegisterLedgerServer(server, service)
 	reflection.Register(server)

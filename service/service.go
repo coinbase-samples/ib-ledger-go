@@ -19,15 +19,13 @@ package service
 import (
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 	"github.com/coinbase-samples/ib-ledger-go/repository"
-	"go.opentelemetry.io/otel/trace"
 )
 
 type Service struct {
 	api.UnimplementedLedgerServer
-	PostgresHandler repository.Repository
-	Tracer          trace.Tracer
+	Repository repository.Repository
 }
 
-func NewService(pql repository.Repository, tp trace.Tracer) *Service {
-	return &Service{PostgresHandler: pql, Tracer: tp}
+func NewService(rep repository.Repository) *Service {
+	return &Service{Repository: rep}
 }

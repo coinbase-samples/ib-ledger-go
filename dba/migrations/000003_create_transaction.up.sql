@@ -67,7 +67,7 @@ BEGIN
     -- validate that we have sufficient balance to complete transaction
     SELECT * FROM get_latest_balance(temp_sender_account.id) INTO most_recent_balance;
     IF most_recent_balance.available < arg_amount THEN
-        RAISE EXCEPTION 'insufficient available balance in sender account to process transaction';
+        RAISE EXCEPTION 'insufficient available balance';
     end if;
 
     -- initialize the transaction

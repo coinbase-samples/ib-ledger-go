@@ -23,15 +23,13 @@ import (
 
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func (s *Service) InitializeAccount(ctx context.Context, req *api.InitializeAccountRequest) (*api.InitializeAccountResponse, error) {
-	result, err := s.PostgresHandler.InitializeAccount(ctx, req)
+	result, err := s.Repository.InitializeAccount(ctx, req)
 	if err != nil {
 		log.Printf("unable to initialize account %v", err)
 		return nil, err
@@ -60,13 +58,9 @@ func (s *Service) GetAccount(ctx context.Context, req *api.GetAccountRequest) (*
 
 func (s *Service) GetAccounts(ctx context.Context, req *api.GetAccountsRequest) (*api.GetAccountsResponse, error) {
 	l := ctxlogrus.Extract(ctx)
-	l.Debugln("starting trace")
-	_, span := s.Tracer.Start(ctx, "getAccounts",
-		trace.WithAttributes(attribute.String("UserId", req.UserId)))
-	defer span.End()
 
 	l.Debugln("fetching accounts for ", req.UserId)
-	results, err := s.PostgresHandler.GetAllAccountsAndMostRecentBalances(ctx, req.UserId)
+	results, err := s.Repository.GetAllAccountsAndMostRecentBalances(ctx, req.UserId)
 	if err != nil {
 		l.Debugln("unable to get accounts and balances for user: %v", err)
 		return nil, err

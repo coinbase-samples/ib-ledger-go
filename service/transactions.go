@@ -29,7 +29,7 @@ import (
 )
 
 func (s *Service) CreateTransaction(ctx context.Context, req *api.CreateTransactionRequest) (*api.CreateTransactionResponse, error) {
-	result, err := s.PostgresHandler.CreateTransaction(ctx, req)
+	result, err := s.Repository.CreateTransaction(ctx, req)
 	if err != nil {
 		log.Errorf("unable to create transaction: %v", err)
 		return nil, err
@@ -53,7 +53,7 @@ func (s *Service) CreateTransaction(ctx context.Context, req *api.CreateTransact
 }
 
 func (s *Service) PartialReleaseHold(ctx context.Context, req *api.PartialReleaseHoldRequest) (*api.PartialReleaseHoldResponse, error) {
-	_, err := s.PostgresHandler.PartialReleaseHold(ctx, req)
+	_, err := s.Repository.PartialReleaseHold(ctx, req)
 	if err != nil {
 		log.Errorf("unable to partial release hold: %v", err)
 		return nil, err
@@ -67,19 +67,19 @@ func (s *Service) PartialReleaseHold(ctx context.Context, req *api.PartialReleas
 func (s *Service) FinalizeTransaction(ctx context.Context, req *api.FinalizeTransactionRequest) (*api.FinalizeTransactionResponse, error) {
 	switch req.FinalizedStatus {
 	case api.TransactionStatus_COMPLETE:
-		_, err := s.PostgresHandler.CompleteTransaction(ctx, req)
+		_, err := s.Repository.CompleteTransaction(ctx, req)
 		if err != nil {
 			log.Errorf("unable to complete transaction: %v", err)
 			return nil, err
 		}
 	case api.TransactionStatus_FAILED:
-		_, err := s.PostgresHandler.FailTransaction(ctx, req)
+		_, err := s.Repository.FailTransaction(ctx, req)
 		if err != nil {
 			log.Errorf("unable to fail transaction: %v", err)
 			return nil, err
 		}
 	case api.TransactionStatus_CANCELED:
-		_, err := s.PostgresHandler.CancelTransaction(ctx, req)
+		_, err := s.Repository.CancelTransaction(ctx, req)
 		if err != nil {
 			log.Errorf("unable to cancel transaction: %v", err)
 			return nil, err

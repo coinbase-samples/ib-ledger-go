@@ -30,8 +30,8 @@ import (
 
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 
-	"github.com/georgysavva/scany/pgxscan"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/georgysavva/scany/v2/pgxscan"
+	"github.com/jackc/pgx/v5/pgxpool"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -70,7 +70,7 @@ func NewPostgresHandler(app config.AppConfig) *PostgresRepository {
 	}
 
 	log.Printf("attempting to connect to database with username: %v, hostname: %v, and port %v", dbUsername, app.DbHostname, app.DbPort)
-	pool, err := pgxpool.Connect(context.Background(), dbUrl)
+	pool, err := pgxpool.New(context.Background(), dbUrl)
 
 	if err != nil {
 		log.Fatalf("Failed to establish DB Pool: %v", err)
