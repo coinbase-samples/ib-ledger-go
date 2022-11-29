@@ -27,7 +27,6 @@ import (
 	"github.com/coinbase-samples/ib-ledger-go/internal/config"
 	"github.com/coinbase-samples/ib-ledger-go/internal/model"
 	"github.com/coinbase-samples/ib-ledger-go/internal/utils"
-	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
 
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 
@@ -35,6 +34,36 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	log "github.com/sirupsen/logrus"
+)
+
+var (
+	initializeAccountSql = `
+    SELECT id, portfolio_id, user_id, currency, created_at, balance, hold, available 
+    FROM initialize_account($1, $2, $3);`
+
+	getAllAccountsAndMostRecentBalancesSql = `
+    SELECT account_id, currency, balance, hold, available, created_at 
+    FROM get_balances_for_users($1);`
+
+	createTransactionSql = `
+    SELECT id, sender_id, receiver_id, request_id, transaction_type, created_at 
+    FROM create_transaction_and_place_hold($1, $2, $3, $4, $5, $6, $7, $8);`
+
+	partialReleaseHoldSql = `
+    SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id 
+    FROM partial_release_hold($1, $2, $3, $4, $5, $6, $7, $8);`
+
+	completeTransactionSql = `
+    SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id 
+    FROM complete_transaction($1, $2);`
+
+	failTransactionSql = `
+    SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id 
+    FROM fail_transaction($1, $2);`
+
+	cancelTransactionSql = `
+    SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id 
+    FROM cancel_transaction($1, $2);`
 )
 
 type PostgresRepository struct {
@@ -100,9 +129,8 @@ func (r *PostgresRepository) handleErrors(err error) error {
 
 func (handler *PostgresRepository) InitializeAccount(ctx context.Context, request *api.InitializeAccountRequest) (*model.InitializeAccountResult, error) {
 	var initializeAccountResult []*model.InitializeAccountResult
-	const sql = `SELECT id, portfolio_id, user_id, currency, created_at, balance, hold, available FROM initialize_account($1, $2, $3)`
 
-	err := pgxscan.Select(context.Background(), handler.Pool, &initializeAccountResult, sql, request.PortfolioId, request.UserId, request.Currency)
+	err := pgxscan.Select(context.Background(), handler.Pool, &initializeAccountResult, initializeAccountSql, request.PortfolioId, request.UserId, request.Currency)
 	if err != nil {
 		return nil, handler.handleErrors(err)
 	}
@@ -112,8 +140,6 @@ func (handler *PostgresRepository) InitializeAccount(ctx context.Context, reques
 
 func (handler *PostgresRepository) CreateTransaction(ctx context.Context, request *api.CreateTransactionRequest) (*model.CreateTransactionResult, error) {
 	var createTransactionResult []*model.CreateTransactionResult
-
-	const sql = `SELECT id, sender_id, receiver_id, request_id, transaction_type, created_at FROM create_transaction_and_place_hold($1, $2, $3, $4, $5, $6, $7, $8)`
 
 	transactionType, ok := utils.GetStringFromTransactionType(request.TransactionType)
 	if !ok {
@@ -129,7 +155,7 @@ func (handler *PostgresRepository) CreateTransaction(ctx context.Context, reques
 	err := pgxscan.Select(context.Background(),
 		handler.Pool,
 		&createTransactionResult,
-		sql,
+		createTransactionSql,
 		request.OrderId,
 		request.Sender.Currency,
 		request.Sender.UserId,
@@ -147,8 +173,6 @@ func (handler *PostgresRepository) CreateTransaction(ctx context.Context, reques
 
 func (handler *PostgresRepository) PartialReleaseHold(ctx context.Context, request *api.PartialReleaseHoldRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
-
-	const sql = `SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id FROM partial_release_hold($1, $2, $3, $4, $5, $6, $7, $8)`
 
 	var retailFeeAmount int64
 	if request.RetailFeeAmount == nil {
@@ -170,7 +194,7 @@ func (handler *PostgresRepository) PartialReleaseHold(ctx context.Context, reque
 		context.Background(),
 		handler.Pool,
 		&TransactionResult,
-		sql,
+		partialReleaseHoldSql,
 		request.OrderId,
 		request.RequestId,
 		request.SenderAmount,
@@ -189,13 +213,11 @@ func (handler *PostgresRepository) PartialReleaseHold(ctx context.Context, reque
 func (handler *PostgresRepository) CompleteTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
 
-	const sql = `SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id FROM complete_transaction($1, $2)`
-
 	err := pgxscan.Select(
 		context.Background(),
 		handler.Pool,
 		&TransactionResult,
-		sql,
+		completeTransactionSql,
 		request.OrderId,
 		request.RequestId)
 	if err != nil {
@@ -208,9 +230,7 @@ func (handler *PostgresRepository) CompleteTransaction(ctx context.Context, requ
 func (handler *PostgresRepository) FailTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
 
-	const sql = `SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id FROM fail_transaction($1, $2)`
-
-	err := pgxscan.Select(context.Background(), handler.Pool, &TransactionResult, sql, request.OrderId, request.RequestId)
+	err := pgxscan.Select(context.Background(), handler.Pool, &TransactionResult, failTransactionSql, request.OrderId, request.RequestId)
 	if err != nil {
 		return nil, handler.handleErrors(err)
 	}
@@ -221,9 +241,7 @@ func (handler *PostgresRepository) FailTransaction(ctx context.Context, request 
 func (handler *PostgresRepository) CancelTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
 
-	const sql = `SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id FROM cancel_transaction($1, $2)`
-
-	err := pgxscan.Select(context.Background(), handler.Pool, &TransactionResult, sql, request.OrderId, request.RequestId)
+	err := pgxscan.Select(context.Background(), handler.Pool, &TransactionResult, cancelTransactionSql, request.OrderId, request.RequestId)
 	if err != nil {
 		return nil, handler.handleErrors(err)
 	}
@@ -233,15 +251,10 @@ func (handler *PostgresRepository) CancelTransaction(ctx context.Context, reques
 
 func (handler *PostgresRepository) GetAllAccountsAndMostRecentBalances(ctx context.Context, userId string) ([]*model.GetAccountResult, error) {
 	var accountResult []*model.GetAccountResult
-	l := ctxlogrus.Extract(ctx)
 
-	const sql = `SELECT account_id, currency, balance, hold, available, created_at FROM get_balances_for_users($1)`
-
-	err := pgxscan.Select(context.Background(), handler.Pool, &accountResult, sql, userId)
+	err := pgxscan.Select(context.Background(), handler.Pool, &accountResult, getAllAccountsAndMostRecentBalancesSql, userId)
 	if err != nil {
-		l.Debugln("error getting accounts", err)
 		return nil, handler.handleErrors(err)
 	}
-	l.Debugln("fetched accounts and balances", accountResult)
 	return accountResult, nil
 }
