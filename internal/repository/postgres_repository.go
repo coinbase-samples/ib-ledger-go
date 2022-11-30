@@ -123,7 +123,11 @@ func (r *PostgresRepository) handleErrors(err error) error {
 			    return ledgererr.New(codes.InvalidArgument, "insufficient balance for transaction")
             case "sender account missing":
             case "receiver account missing": 
-			    return ledgererr.New(codes.InvalidArgument, "account not found")
+			    return ledgererr.New(codes.NotFound, "account not found")
+            case "transaction not found":
+                return ledgererr.New(codes.NotFound, msg)
+            case "no unreleased hold found for transaction":
+                return ledgererr.New(codes.InvalidArgument, msg)
             default:
 			    return ledgererr.New(codes.Internal, "postgres internal failure")
 		}
