@@ -5,6 +5,7 @@ PROFILE ?= sa-infra
 ENV_NAME ?= dev
 ACCOUNT_ID := $(shell aws sts get-caller-identity --profile $(PROFILE) --query 'Account' --output text)
 
+.PHONY: run
 run:
 	go run cmd/server/main.go
 
@@ -41,6 +42,3 @@ start-local:
     && docker exec -i ledger_db psql -U postgres -d ledger < examples/sql/initialize_test_accounts.sql \
     && go run cmd/server/main.go
 
-.PHONY: start
-start:
-	go run cmd/server/*.go
