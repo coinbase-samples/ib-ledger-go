@@ -59,13 +59,11 @@ func (s *Service) GetAccount(ctx context.Context, req *api.GetAccountRequest) (*
 func (s *Service) GetAccounts(ctx context.Context, req *api.GetAccountsRequest) (*api.GetAccountsResponse, error) {
 	l := ctxlogrus.Extract(ctx)
 
-	l.Debugln("fetching accounts for ", req.UserId)
 	results, err := s.Repository.GetAllAccountsAndMostRecentBalances(ctx, req.UserId)
 	if err != nil {
-		l.Debugln("unable to get accounts and balances for user: %v", err)
+		l.Errorf("unable to get accounts and balances for user: %v", err)
 		return nil, err
 	}
-	l.Debugln("found accounts", results)
 
 	var outputResults []*api.AccountAndBalance
 
@@ -79,7 +77,6 @@ func (s *Service) GetAccounts(ctx context.Context, req *api.GetAccountsRequest) 
 			BalanceAt: timestamppb.New(r.CreatedAt),
 		})
 	}
-	l.Debugln("Final accounts result", outputResults)
 
 	return &api.GetAccountsResponse{Accounts: outputResults}, nil
 }

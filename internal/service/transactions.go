@@ -20,11 +20,12 @@ import (
 	"context"
 	"fmt"
 
+	ledgererr "github.com/coinbase-samples/ib-ledger-go/internal/errors"
 	"github.com/coinbase-samples/ib-ledger-go/internal/utils"
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
-
 	log "github.com/sirupsen/logrus"
 
+	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -36,7 +37,7 @@ func (s *Service) CreateTransaction(ctx context.Context, req *api.CreateTransact
 	}
 	transactionType, ok := utils.GetTransactionTypeFromString(result.TransactionType)
 	if !ok {
-		return nil, fmt.Errorf("bad request: transaction type not supported: %v", result.TransactionType)
+		return nil, ledgererr.New(codes.InvalidArgument, fmt.Sprintf("bad request: transaction type not supported: %v", result.TransactionType))
 	}
 	response := &api.CreateTransactionResponse{
 		Transaction: &api.Transaction{
@@ -85,7 +86,7 @@ func (s *Service) FinalizeTransaction(ctx context.Context, req *api.FinalizeTran
 			return nil, err
 		}
 	default:
-		return nil, fmt.Errorf("finalize transaction: unsupported finalized transaction status %v", req.FinalizedStatus)
+		return nil, ledgererr.New(codes.InvalidArgument, fmt.Sprintf("finalize transaction: unsupported finalized transaction status %v", req.FinalizedStatus))
 	}
 
 	response := &api.FinalizeTransactionResponse{
