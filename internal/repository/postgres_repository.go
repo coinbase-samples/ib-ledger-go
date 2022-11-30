@@ -25,8 +25,10 @@ import (
 	"strconv"
 
 	"github.com/coinbase-samples/ib-ledger-go/internal/config"
+	ledgererr "github.com/coinbase-samples/ib-ledger-go/internal/errors"
 	"github.com/coinbase-samples/ib-ledger-go/internal/model"
 	"github.com/coinbase-samples/ib-ledger-go/internal/utils"
+	"google.golang.org/grpc/codes"
 
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 
@@ -116,15 +118,17 @@ func (r *PostgresRepository) handleErrors(err error) error {
 	if errors.As(err, &pgErr) {
 		msg := pgErr.Message
 		log.Errorf("postgres error - code: %v - message: %v", pgErr.SQLState(), msg)
-		if msg == "insufficient available balance" {
-			return errors.New("insufficient balance for transaction")
-		} else if msg == "sender account missing" || msg == "receiver account missing" {
-			return errors.New("account not found")
-		} else {
-			return errors.New("postgres internal failure")
+        switch msg {
+            case "insufficient available balance": 
+			    return ledgererr.New(codes.InvalidArgument, "insufficient balance for transaction")
+            case "sender account missing":
+            case "receiver account missing": 
+			    return ledgererr.New(codes.InvalidArgument, "account not found")
+            default:
+			    return ledgererr.New(codes.Internal, "postgres internal failure")
 		}
 	}
-	return err
+	return ledgererr.FromError(err)
 }
 
 func (handler *PostgresRepository) InitializeAccount(ctx context.Context, request *api.InitializeAccountRequest) (*model.InitializeAccountResult, error) {
