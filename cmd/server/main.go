@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/coinbase-samples/ib-ledger-go/internal/config"
+	"github.com/coinbase-samples/ib-ledger-go/internal/dbmanager"
 	"github.com/coinbase-samples/ib-ledger-go/internal/repository"
 	"github.com/coinbase-samples/ib-ledger-go/internal/service"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -107,7 +108,8 @@ func main() {
 	grpc_health_v1.RegisterHealthServer(server, healthServer)
 
 	// Setup application service
-	rep := repository.NewPostgresHandler(app)
+    dbm := dbmanager.NewPostgresDBManager(app)
+	rep := repository.NewPostgresHandler(dbm)
 	service := service.NewService(rep)
 
 	api.RegisterLedgerServer(server, service)

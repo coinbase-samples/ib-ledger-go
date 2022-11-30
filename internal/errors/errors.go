@@ -38,3 +38,13 @@ func (l *LedgerError) Error() string {
 func (l *LedgerError) ToGrpcError() error {
 	return status.Error(l.Code, l.Message)
 }
+
+// Method used by the `Status.FromError` class to determine the GRPCStatus code
+// associated with an error.
+// See: https://pkg.go.dev/google.golang.org/grpc/status#FromError
+func (e *LedgerError) GRPCStatus() *status.Status {
+	if e == nil {
+		return nil
+	}
+	return status.New(e.Code, e.Message)
+}

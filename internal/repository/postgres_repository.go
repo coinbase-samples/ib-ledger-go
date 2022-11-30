@@ -18,13 +18,11 @@ package repository
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
 	"strconv"
 
-	"github.com/coinbase-samples/ib-ledger-go/internal/config"
+	"github.com/coinbase-samples/ib-ledger-go/internal/dbmanager"
 	ledgererr "github.com/coinbase-samples/ib-ledger-go/internal/errors"
 	"github.com/coinbase-samples/ib-ledger-go/internal/model"
 	"github.com/coinbase-samples/ib-ledger-go/internal/utils"
@@ -32,9 +30,7 @@ import (
 
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 
-	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -69,47 +65,11 @@ var (
 )
 
 type PostgresRepository struct {
-	Pool *pgxpool.Pool
+    DBManager dbmanager.DBManager
 }
 
-func NewPostgresHandler(app config.AppConfig) *PostgresRepository {
-
-	if app.DbCreds == "" {
-		log.Fatalf("no environment variable set for DB_CREDENTIALS")
-	}
-
-	if app.DbHostname == "" {
-		log.Fatalf("no environment variable set for DB_HOSTNAME")
-	}
-
-	if app.DbPort == "" {
-		log.Fatalf("no environment variable set for DB_PORT")
-	}
-
-	var dbCredsJson map[string]interface{}
-	err := json.Unmarshal([]byte(app.DbCreds), &dbCredsJson)
-
-	if err != nil {
-		log.Fatalf("unable to unmarshal the cred string")
-	}
-
-	dbUsername := dbCredsJson["username"].(string)
-	dbPassword := url.QueryEscape(dbCredsJson["password"].(string))
-
-	dbUrl := fmt.Sprintf("postgres://%s:%s@%s:%s/ledger", dbUsername, dbPassword, app.DbHostname, app.DbPort)
-
-	if app.Env == "local" {
-		dbUrl += "?sslmode=disable"
-	}
-
-	log.Printf("attempting to connect to database with username: %v, hostname: %v, and port %v", dbUsername, app.DbHostname, app.DbPort)
-	pool, err := pgxpool.New(context.Background(), dbUrl)
-
-	if err != nil {
-		log.Fatalf("Failed to establish DB Pool: %v", err)
-	}
-
-	return &PostgresRepository{Pool: pool}
+func NewPostgresHandler(dbmanager dbmanager.DBManager) *PostgresRepository {
+	return &PostgresRepository{DBManager: dbmanager}
 }
 
 func (r *PostgresRepository) handleErrors(err error) error {
@@ -132,21 +92,22 @@ func (r *PostgresRepository) handleErrors(err error) error {
 			    return ledgererr.New(codes.Internal, "postgres internal failure")
 		}
 	}
+    log.Error(err.Error())
 	return ledgererr.FromError(err)
 }
 
-func (handler *PostgresRepository) InitializeAccount(ctx context.Context, request *api.InitializeAccountRequest) (*model.InitializeAccountResult, error) {
+func (pr *PostgresRepository) InitializeAccount(ctx context.Context, request *api.InitializeAccountRequest) (*model.InitializeAccountResult, error) {
 	var initializeAccountResult []*model.InitializeAccountResult
 
-	err := pgxscan.Select(context.Background(), handler.Pool, &initializeAccountResult, initializeAccountSql, request.PortfolioId, request.UserId, request.Currency)
+	err := pr.DBManager.Query(context.Background(), &initializeAccountResult, initializeAccountSql, request.PortfolioId, request.UserId, request.Currency)
 	if err != nil {
-		return nil, handler.handleErrors(err)
+		return nil, pr.handleErrors(err)
 	}
 
 	return initializeAccountResult[0], nil
 }
 
-func (handler *PostgresRepository) CreateTransaction(ctx context.Context, request *api.CreateTransactionRequest) (*model.CreateTransactionResult, error) {
+func (pr *PostgresRepository) CreateTransaction(ctx context.Context, request *api.CreateTransactionRequest) (*model.CreateTransactionResult, error) {
 	var createTransactionResult []*model.CreateTransactionResult
 
 	transactionType, ok := utils.GetStringFromTransactionType(request.TransactionType)
@@ -160,8 +121,7 @@ func (handler *PostgresRepository) CreateTransaction(ctx context.Context, reques
 		totalAmountInt += feeAmountInt
 	}
 
-	err := pgxscan.Select(context.Background(),
-		handler.Pool,
+	err := pr.DBManager.Query(context.Background(),
 		&createTransactionResult,
 		createTransactionSql,
 		request.OrderId,
@@ -173,13 +133,13 @@ func (handler *PostgresRepository) CreateTransaction(ctx context.Context, reques
 		totalAmountInt,
 		transactionType)
 	if err != nil {
-		return nil, handler.handleErrors(err)
+		return nil, pr.handleErrors(err)
 	}
 
 	return createTransactionResult[0], nil
 }
 
-func (handler *PostgresRepository) PartialReleaseHold(ctx context.Context, request *api.PartialReleaseHoldRequest) (*model.TransactionResult, error) {
+func (pr *PostgresRepository) PartialReleaseHold(ctx context.Context, request *api.PartialReleaseHoldRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
 
 	var retailFeeAmount int64
@@ -198,9 +158,8 @@ func (handler *PostgresRepository) PartialReleaseHold(ctx context.Context, reque
 
 	retailAccountId, venueAccountId := utils.GetFeeAccounts("USD")
 
-	err := pgxscan.Select(
+	err := pr.DBManager.Query(
 		context.Background(),
-		handler.Pool,
 		&TransactionResult,
 		partialReleaseHoldSql,
 		request.OrderId,
@@ -212,57 +171,56 @@ func (handler *PostgresRepository) PartialReleaseHold(ctx context.Context, reque
 		venueFeeAmount,
 		venueAccountId)
 	if err != nil {
-		return nil, handler.handleErrors(err)
+		return nil, pr.handleErrors(err)
 	}
 
 	return TransactionResult[0], nil
 }
 
-func (handler *PostgresRepository) CompleteTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
+func (pr *PostgresRepository) CompleteTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
 
-	err := pgxscan.Select(
+	err := pr.DBManager.Query(
 		context.Background(),
-		handler.Pool,
 		&TransactionResult,
 		completeTransactionSql,
 		request.OrderId,
 		request.RequestId)
 	if err != nil {
-		return nil, handler.handleErrors(err)
+		return nil, pr.handleErrors(err)
 	}
 
 	return TransactionResult[0], nil
 }
 
-func (handler *PostgresRepository) FailTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
+func (pr *PostgresRepository) FailTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
 
-	err := pgxscan.Select(context.Background(), handler.Pool, &TransactionResult, failTransactionSql, request.OrderId, request.RequestId)
+	err := pr.DBManager.Query(context.Background(), &TransactionResult, failTransactionSql, request.OrderId, request.RequestId)
 	if err != nil {
-		return nil, handler.handleErrors(err)
+		return nil, pr.handleErrors(err)
 	}
 
 	return TransactionResult[0], nil
 }
 
-func (handler *PostgresRepository) CancelTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
+func (pr *PostgresRepository) CancelTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
 
-	err := pgxscan.Select(context.Background(), handler.Pool, &TransactionResult, cancelTransactionSql, request.OrderId, request.RequestId)
+	err := pr.DBManager.Query(context.Background(), &TransactionResult, cancelTransactionSql, request.OrderId, request.RequestId)
 	if err != nil {
-		return nil, handler.handleErrors(err)
+		return nil, pr.handleErrors(err)
 	}
 
 	return TransactionResult[0], nil
 }
 
-func (handler *PostgresRepository) GetAllAccountsAndMostRecentBalances(ctx context.Context, userId string) ([]*model.GetAccountResult, error) {
+func (pr *PostgresRepository) GetAllAccountsAndMostRecentBalances(ctx context.Context, userId string) ([]*model.GetAccountResult, error) {
 	var accountResult []*model.GetAccountResult
 
-	err := pgxscan.Select(context.Background(), handler.Pool, &accountResult, getAllAccountsAndMostRecentBalancesSql, userId)
+	err := pr.DBManager.Query(context.Background(), &accountResult, getAllAccountsAndMostRecentBalancesSql, userId)
 	if err != nil {
-		return nil, handler.handleErrors(err)
+		return nil, pr.handleErrors(err)
 	}
 	return accountResult, nil
 }
