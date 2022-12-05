@@ -86,7 +86,7 @@ func (s *Service) FinalizeTransaction(ctx context.Context, req *api.FinalizeTran
 			return nil, err
 		}
 	default:
-		return nil, ledgererr.New(codes.InvalidArgument, fmt.Sprintf("finalize transaction: unsupported finalized transaction status %v", req.FinalizedStatus))
+        return nil, ledgererr.New(codes.InvalidArgument, fmt.Sprintf("finalize transaction: unable to finalize pending transaction - transaction: %v", req.OrderId))
 	}
 
 	response := &api.FinalizeTransactionResponse{

@@ -52,10 +52,6 @@ func (s *Service) InitializeAccount(ctx context.Context, req *api.InitializeAcco
 	return response, nil
 }
 
-func (s *Service) GetAccount(ctx context.Context, req *api.GetAccountRequest) (*api.GetAccountResponse, error) {
-	return nil, nil
-}
-
 func (s *Service) GetAccounts(ctx context.Context, req *api.GetAccountsRequest) (*api.GetAccountsResponse, error) {
 	l := ctxlogrus.Extract(ctx)
 
@@ -79,12 +75,4 @@ func (s *Service) GetAccounts(ctx context.Context, req *api.GetAccountsRequest) 
 	}
 
 	return &api.GetAccountsResponse{Accounts: outputResults}, nil
-}
-
-func (s *Service) GetBalance(ctx context.Context, req *api.GetBalanceRequest) (*api.GetBalanceResponse, error) {
-	return nil, nil
-}
-
-func (s *Service) GetBalances(ctx context.Context, req *api.GetBalancesRequest) (*api.GetBalancesResponse, error) {
-	return nil, nil
 }
