@@ -22,15 +22,15 @@ CREATE OR REPLACE FUNCTION complete_transaction(
 AS
 $$
 DECLARE
-    temp_transaction             transaction;
+    temp_transaction           transaction;
     temp_finalized_transaction finalized_transaction;
-    temp_hold                    hold;
-    sender_account               account;
-    receiver_account             account;
-    most_recent_sender_balance   account_balance;
-    sender_hold_amount           NUMERIC;
-    sender_balance_id            UUID;
-    result                       transaction_result;
+    temp_hold                  hold;
+    sender_account             account;
+    receiver_account           account;
+    sender_most_recent_balance account_balance;
+    temp_hold_amount           NUMERIC;
+    temp_sender_new_balance_id UUID;
+    result                     transaction_result;
 BEGIN
     SELECT * FROM transaction WHERE id = arg_transaction_id INTO temp_transaction;
     IF NOT FOUND THEN
@@ -61,22 +61,36 @@ BEGIN
     end if;
 
     SELECT *
-    FROM get_unreleased_hold(temp_transaction.id, temp_transaction.sender_id)
+    FROM hold
+    WHERE hold.transaction_id = arg_transaction_id
+      AND hold.account_id = temp_transaction.sender_id
+      AND NOT EXISTS(
+            SELECT hold_id
+            FROM released_hold
+            WHERE released_hold.hold_id = hold.id)
     INTO temp_hold;
 
     IF FOUND THEN
-        --Release the hold
         INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
-        --Get most recent sender balance
-        SELECT * FROM get_latest_balance(temp_transaction.sender_id) INTO most_recent_sender_balance;
-        --Insert Sender Balance
-        sender_hold_amount = most_recent_sender_balance.hold - temp_hold.amount;
+
+        result.hold_id = temp_hold.id;
+
+        --Update Sender Balance
+        SELECT *
+        FROM get_latest_balance(
+                temp_transaction.sender_id
+            )
+        INTO sender_most_recent_balance;
+
+        temp_hold_amount = sender_most_recent_balance.hold - temp_hold.amount;
+
         INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
-        VALUES (temp_transaction.sender_id, arg_request_id, most_recent_sender_balance.balance, sender_hold_amount,
-                most_recent_sender_balance.balance - sender_hold_amount, most_recent_sender_balance.count + 1)
-        RETURNING id INTO sender_balance_id;
-        result.sender_balance_id = sender_balance_id;
-    end if;
+        VALUES (temp_transaction.sender_id, arg_request_id, sender_most_recent_balance.balance, temp_hold_amount,
+                sender_most_recent_balance.balance - temp_hold_amount, sender_most_recent_balance.count + 1)
+        RETURNING id INTO temp_sender_new_balance_id;
+
+        result.sender_balance_id = temp_sender_new_balance_id;
+    END IF;
 
     --Finalize Transaction
     INSERT INTO finalized_transaction (transaction_id, completed_at, request_id)
@@ -133,11 +147,16 @@ BEGIN
     end if;
 
     SELECT *
-    FROM get_unreleased_hold(temp_transaction.id, temp_transaction.sender_id)
+    FROM hold
+    WHERE hold.transaction_id = arg_transaction_id
+      AND hold.account_id = temp_transaction.sender_id
+      AND NOT EXISTS(
+            SELECT hold_id
+            FROM released_hold
+            WHERE released_hold.hold_id = hold.id)
     INTO temp_hold;
 
     IF FOUND THEN
-        --Release the hold
         INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
 
         result.hold_id = temp_hold.id;
@@ -213,11 +232,16 @@ BEGIN
     end if;
 
     SELECT *
-    FROM get_unreleased_hold(temp_transaction.id, temp_transaction.sender_id)
+    FROM hold
+    WHERE hold.transaction_id = arg_transaction_id
+      AND hold.account_id = temp_transaction.sender_id
+      AND NOT EXISTS(
+            SELECT hold_id
+            FROM released_hold
+            WHERE released_hold.hold_id = hold.id)
     INTO temp_hold;
 
-    IF FOUND THEN
-        --Release the hold
+    IF FOUND THEN --Release the hold
         INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
 
         result.hold_id = temp_hold.id;

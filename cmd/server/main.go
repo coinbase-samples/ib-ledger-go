@@ -108,7 +108,7 @@ func main() {
 	grpc_health_v1.RegisterHealthServer(server, healthServer)
 
 	// Setup application service
-    dbm := dbmanager.NewPostgresDBManager(app)
+	dbm := dbmanager.NewPostgresDBManager(app)
 	rep := repository.NewPostgresHandler(dbm)
 	service := service.NewService(rep)
 

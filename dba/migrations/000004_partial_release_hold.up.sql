@@ -34,9 +34,6 @@ BEGIN
             WHERE released_hold.hold_id = hold.id)
     INTO result_hold;
 
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'no unreleased hold found for transaction';
-    end if;
     return result_hold;
 END
 $$;
@@ -91,7 +88,9 @@ BEGIN
     --idempotency
     PERFORM *
     FROM entry
-    WHERE transaction_id = arg_transaction_id AND request_id = arg_request_id AND account_id = temp_transaction.sender_id;
+    WHERE transaction_id = arg_transaction_id
+      AND request_id = arg_request_id
+      AND account_id = temp_transaction.sender_id;
     if FOUND THEN
         SELECT id
         FROM entry
@@ -107,6 +106,10 @@ BEGIN
     SELECT *
     FROM get_unreleased_hold(temp_transaction.id, temp_transaction.sender_id)
     INTO temp_hold;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'no unreleased hold found for transaction';
+    end if;
 
     --Release the hold
     INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);

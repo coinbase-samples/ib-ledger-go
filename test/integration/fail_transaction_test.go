@@ -14,41 +14,26 @@
  * limitations under the License.
  */
 
-package main
+package test
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"testing"
 
 	ledger "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func main() {
+func FailTransactionSucceedsTest(t *testing.T) {
 	ctx := context.Background()
 
-	md := metadata.New(map[string]string{"x-route-id": "ledger"})
-
-	conn, err := grpc.DialContext(
-		metadata.NewOutgoingContext(context.TODO(), md),
-		"localhost:8445",
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-
-	if err != nil {
-		log.Print(err)
-		log.Fatalf("unable to generate ledger connection")
-	}
-
-	ledgerClient := ledger.NewLedgerClient(conn)
+	ledgerClient := newLedgerServiceClient(ctx, t)
 
 	transactionRes, err := ledgerClient.CreateTransaction(ctx, &ledger.CreateTransactionRequest{
-		OrderId: "456B4BF7-D975-4AED-B0F0-33FC1666F69B",
+		OrderId: "CD4A64A6-6C88-4EBD-B7B2-F57DC7202D70",
 		Sender: &ledger.Account{
 			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
 			Currency: "USD",
@@ -60,7 +45,7 @@ func main() {
 		TotalAmount:     "1000",
 		FeeAmount:       &wrapperspb.StringValue{Value: "5"},
 		TransactionType: ledger.TransactionType_TRANSFER,
-		RequestId:       &wrapperspb.StringValue{Value: "33D81CC5-42AE-4BCE-86F5-915338A9FDFF"},
+		RequestId:       &wrapperspb.StringValue{Value: "27AA0E33-FC64-4D80-A811-C9BB3416692A"},
 	})
 
 	if err != nil {
@@ -83,7 +68,7 @@ func main() {
 
 	_, err = ledgerClient.PartialReleaseHold(ctx, &ledger.PartialReleaseHoldRequest{
 		OrderId:         transactionRes.Transaction.Id,
-		RequestId:       "11A40B5B-74AA-4CBD-A04B-AADC4F0487E8",
+		RequestId:       "4FC0EA00-1709-491B-BFD3-7EA85B9C7447",
 		SenderAmount:    "1",
 		ReceiverAmount:  "10",
 		VenueFeeAmount:  &wrapperspb.StringValue{Value: "1"},
@@ -97,8 +82,8 @@ func main() {
 
 	_, err = ledgerClient.FinalizeTransaction(ctx, &ledger.FinalizeTransactionRequest{
 		OrderId:         transactionRes.Transaction.Id,
-		RequestId:       "E2586CC8-2879-48B2-83E2-F1F5CF87E248",
-		FinalizedStatus: ledger.TransactionStatus_COMPLETE,
+		RequestId:       "28367E08-98A4-4614-9FA6-FCD830CCA9F7",
+		FinalizedStatus: ledger.TransactionStatus_FAILED,
 		SenderAmount:    &wrapperspb.StringValue{Value: "999"},
 		ReceiverAmount:  &wrapperspb.StringValue{Value: "56"},
 		VenueFeeAmount:  &wrapperspb.StringValue{Value: "1"},
@@ -122,13 +107,4 @@ func main() {
 	for _, a := range output.Accounts {
 		fmt.Println(fmt.Sprintf("accountId: %s - currency: %s - balance: %s, hold: %s, available: %s", a.AccountId, a.Currency, a.Balance, a.Hold, a.Available))
 	}
-}
-
-func NewLedgerServiceClient(uri string) ledger.LedgerClient {
-	conn, err := grpc.Dial(uri, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		panic("unable to create ledger client")
-	}
-
-	return ledger.NewLedgerClient(conn)
 }
