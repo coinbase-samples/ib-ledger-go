@@ -14,6 +14,4 @@
  * limitations under the License.
  */
 
-DROP FUNCTION complete_transaction;
-DROP FUNCTION cancel_transaction;
-DROP FUNCTION fail_transaction;
+DROP FUNCTION get_account_and_latest_balance;

@@ -16,37 +16,36 @@
 
 CREATE OR REPLACE FUNCTION complete_transaction(
     arg_transaction_id UUID,
-    arg_request_id UUID,
-    arg_receiver_amount NUMERIC,
-    arg_retail_fee_amount NUMERIC,
-    arg_retail_fee_account_id UUID,
-    arg_venue_fee_amount NUMERIC,
-    arg_venue_fee_account_id UUID
+    arg_request_id UUID
 ) RETURNS transaction_result
     LANGUAGE plpgsql
 AS
 $$
 DECLARE
     temp_transaction             transaction;
+    temp_finalized_transaction finalized_transaction;
     temp_hold                    hold;
     sender_account               account;
     receiver_account             account;
     most_recent_sender_balance   account_balance;
-    most_recent_receiver_balance account_balance;
-    temp_balance_amount          NUMERIC;
     sender_hold_amount           NUMERIC;
-    sender_entry_id              UUID;
-    receiver_entry_id            UUID;
     sender_balance_id            UUID;
-    receiver_balance_id          UUID;
     result                       transaction_result;
 BEGIN
+    SELECT * FROM transaction WHERE id = arg_transaction_id INTO temp_transaction;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'transaction not found';
+    end if;
+
+    --Locking
+    LOCK TABLE account IN ROW EXCLUSIVE MODE;
+    SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
+    SELECT * FROM account WHERE id = temp_transaction.receiver_id into receiver_account FOR UPDATE;
+
     SELECT *
-    FROM transaction
-    WHERE id = arg_transaction_id
-      AND EXISTS(
-            SELECT * FROM finalized_transaction WHERE transaction_id = arg_transaction_id)
-    INTO temp_transaction;
+    FROM finalized_transaction
+    WHERE transaction_id = arg_transaction_id
+    INTO temp_finalized_transaction;
     IF FOUND THEN
         result.sender_balance_id = (SELECT id
                                     FROM account_balance
@@ -56,71 +55,28 @@ BEGIN
                                       FROM account_balance
                                       WHERE request_id = arg_request_id
                                         AND account_id = temp_transaction.receiver_id);
+        UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
+        UPDATE account SET user_id = receiver_account.user_id WHERE id = receiver_account.id;
         return result;
     end if;
-
-    --Locking
-    LOCK TABLE account IN ROW EXCLUSIVE MODE;
-    SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
-    SELECT * FROM account WHERE id = temp_transaction.receiver_id into receiver_account FOR UPDATE;
-
-    SELECT * FROM transaction WHERE id = arg_transaction_id INTO temp_transaction;
 
     SELECT *
     FROM get_unreleased_hold(temp_transaction.id, temp_transaction.sender_id)
     INTO temp_hold;
 
-    --Release the hold
-    INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
-
-    --Get most recent sender balance
-    SELECT * FROM get_latest_balance(temp_transaction.sender_id) INTO most_recent_sender_balance;
-
-    --Insert Sender Entry for Amount Sent to Receiver
-    INSERT INTO entry (account_id, transaction_id, amount, direction, request_id)
-    VALUES (temp_transaction.sender_id, arg_transaction_id,
-            temp_hold.amount - arg_venue_fee_amount - arg_retail_fee_amount, 'DEBIT', arg_request_id)
-    RETURNING id INTO sender_entry_id;
-    result.sender_entry_id = sender_entry_id;
-
-    --Insert Sender Entry for Fee if Fee Paid
-    IF arg_venue_fee_amount != 0 THEN
-        INSERT INTO entry (account_id, transaction_id, amount, direction, request_id)
-        VALUES (temp_transaction.sender_id, arg_transaction_id, arg_venue_fee_amount, 'DEBIT', arg_request_id);
-        INSERT INTO entry (account_id, transaction_id, amount, direction, request_id)
-        VALUES (arg_venue_fee_account_id, arg_transaction_id, arg_venue_fee_amount, 'CREDIT', arg_request_id);
-    END IF;
-
-    IF arg_retail_fee_amount != 0 THEN
-        INSERT INTO entry (account_id, transaction_id, amount, direction, request_id)
-        VALUES (temp_transaction.sender_id, arg_transaction_id, arg_retail_fee_amount, 'DEBIT', arg_request_id);
-        INSERT INTO entry (account_id, transaction_id, amount, direction, request_id)
-        VALUES (arg_retail_fee_account_id, arg_transaction_id, arg_retail_fee_amount, 'CREDIT', arg_request_id);
+    IF FOUND THEN
+        --Release the hold
+        INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
+        --Get most recent sender balance
+        SELECT * FROM get_latest_balance(temp_transaction.sender_id) INTO most_recent_sender_balance;
+        --Insert Sender Balance
+        sender_hold_amount = most_recent_sender_balance.hold - temp_hold.amount;
+        INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
+        VALUES (temp_transaction.sender_id, arg_request_id, most_recent_sender_balance.balance, sender_hold_amount,
+                most_recent_sender_balance.balance - sender_hold_amount, most_recent_sender_balance.count + 1)
+        RETURNING id INTO sender_balance_id;
+        result.sender_balance_id = sender_balance_id;
     end if;
-
-    --Insert Sender Balance
-    temp_balance_amount = most_recent_sender_balance.balance - temp_hold.amount;
-    sender_hold_amount = most_recent_sender_balance.hold - temp_hold.amount;
-    INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
-    VALUES (temp_transaction.sender_id, arg_request_id, temp_balance_amount, sender_hold_amount,
-            temp_balance_amount - sender_hold_amount, most_recent_sender_balance.count + 1)
-    RETURNING id INTO sender_balance_id;
-    result.sender_balance_id = sender_balance_id;
-
-    --Insert Receiver Entry amd Update Account Balance
-    INSERT INTO entry (account_id, transaction_id, amount, direction, request_id)
-    VALUES (temp_transaction.receiver_id, arg_transaction_id, arg_receiver_amount, 'CREDIT', arg_request_id)
-    RETURNING id INTO receiver_entry_id;
-    result.receiver_entry_id = receiver_entry_id;
-
-    SELECT * FROM get_latest_balance(temp_transaction.receiver_id) INTO most_recent_receiver_balance;
-
-    temp_balance_amount = most_recent_receiver_balance.balance + arg_receiver_amount;
-    INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
-    VALUES (temp_transaction.receiver_id, arg_request_id, temp_balance_amount, most_recent_receiver_balance.hold,
-            temp_balance_amount - most_recent_receiver_balance.hold, most_recent_receiver_balance.count + 1)
-    RETURNING id INTO receiver_balance_id;
-    result.receiver_balance_id = receiver_balance_id;
 
     --Finalize Transaction
     INSERT INTO finalized_transaction (transaction_id, completed_at, request_id)
@@ -128,6 +84,166 @@ BEGIN
 
     UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
     UPDATE account SET user_id = receiver_account.user_id WHERE id = receiver_account.id;
+
+    return result;
+END
+$$;
+
+CREATE OR REPLACE FUNCTION fail_transaction(
+    arg_transaction_id UUID,
+    arg_request_id UUID
+) RETURNS transaction_result
+    LANGUAGE plpgsql
+AS
+$$
+DECLARE
+    temp_transaction           transaction;
+    temp_finalized_transaction finalized_transaction;
+    temp_hold                  hold;
+    sender_account             account;
+    sender_most_recent_balance account_balance;
+    temp_hold_amount           NUMERIC;
+    temp_sender_new_balance_id uuid;
+    result                     transaction_result;
+BEGIN
+    SELECT * FROM transaction WHERE id = arg_transaction_id INTO temp_transaction;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'transaction not found';
+    end if;
+
+    --Locking
+    LOCK TABLE account IN ROW EXCLUSIVE MODE;
+    SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
+
+    SELECT *
+    FROM finalized_transaction
+    WHERE transaction_id = arg_transaction_id
+    INTO temp_finalized_transaction;
+    IF FOUND THEN
+        result.sender_balance_id = (SELECT id
+                                    FROM account_balance
+                                    WHERE request_id = arg_request_id
+                                      AND account_id = temp_transaction.sender_id);
+        result.receiver_balance_id = (SELECT id
+                                      FROM account_balance
+                                      WHERE request_id = arg_request_id
+                                        AND account_id = temp_transaction.receiver_id);
+        UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
+        return result;
+    end if;
+
+    SELECT *
+    FROM get_unreleased_hold(temp_transaction.id, temp_transaction.sender_id)
+    INTO temp_hold;
+
+    IF FOUND THEN
+        --Release the hold
+        INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
+
+        result.hold_id = temp_hold.id;
+
+        --Update Sender Balance
+        SELECT *
+        FROM get_latest_balance(
+                temp_transaction.sender_id
+            )
+        INTO sender_most_recent_balance;
+
+        temp_hold_amount = sender_most_recent_balance.hold - temp_hold.amount;
+
+        INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
+        VALUES (temp_transaction.sender_id, arg_request_id, sender_most_recent_balance.balance, temp_hold_amount,
+                sender_most_recent_balance.balance - temp_hold_amount, sender_most_recent_balance.count + 1)
+        RETURNING id INTO temp_sender_new_balance_id;
+
+        result.sender_balance_id = temp_sender_new_balance_id;
+    END IF;
+
+    --Finalize Transaction
+    INSERT INTO finalized_transaction (transaction_id, failed_at, request_id)
+    VALUES (arg_transaction_id, now(), arg_request_id);
+
+    UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
+
+    return result;
+END
+$$;
+
+CREATE OR REPLACE FUNCTION cancel_transaction(
+    arg_transaction_id UUID,
+    arg_request_id UUID
+) RETURNS transaction_result
+    LANGUAGE plpgsql
+AS
+$$
+DECLARE
+    temp_transaction           transaction;
+    temp_finalized_transaction finalized_transaction;
+    temp_hold                  hold;
+    sender_account             account;
+    sender_most_recent_balance account_balance;
+    temp_hold_amount           NUMERIC;
+    temp_sender_new_balance_id uuid;
+    result                     transaction_result;
+BEGIN
+    SELECT * FROM transaction WHERE id = arg_transaction_id INTO temp_transaction;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'transaction not found';
+    end if;
+
+    --Locking
+    LOCK TABLE account IN ROW EXCLUSIVE MODE;
+    SELECT * FROM account WHERE id = temp_transaction.sender_id into sender_account FOR UPDATE;
+
+    SELECT *
+    FROM finalized_transaction
+    WHERE transaction_id = arg_transaction_id
+    INTO temp_finalized_transaction;
+    IF FOUND THEN
+        result.sender_balance_id = (SELECT id
+                                    FROM account_balance
+                                    WHERE request_id = arg_request_id
+                                      AND account_id = temp_transaction.sender_id);
+        result.receiver_balance_id = (SELECT id
+                                      FROM account_balance
+                                      WHERE request_id = arg_request_id
+                                        AND account_id = temp_transaction.receiver_id);
+        UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
+        return result;
+    end if;
+
+    SELECT *
+    FROM get_unreleased_hold(temp_transaction.id, temp_transaction.sender_id)
+    INTO temp_hold;
+
+    IF FOUND THEN
+        --Release the hold
+        INSERT INTO released_hold (hold_id, request_id) VALUES (temp_hold.id, arg_request_id);
+
+        result.hold_id = temp_hold.id;
+
+        --Update Sender Balance
+        SELECT *
+        FROM get_latest_balance(
+                temp_transaction.sender_id
+            )
+        INTO sender_most_recent_balance;
+
+        temp_hold_amount = sender_most_recent_balance.hold - temp_hold.amount;
+
+        INSERT INTO account_balance(account_id, request_id, balance, hold, available, count)
+        VALUES (temp_transaction.sender_id, arg_request_id, sender_most_recent_balance.balance, temp_hold_amount,
+                sender_most_recent_balance.balance - temp_hold_amount, sender_most_recent_balance.count + 1)
+        RETURNING id INTO temp_sender_new_balance_id;
+
+        result.sender_balance_id = temp_sender_new_balance_id;
+    END IF;
+
+    --Finalize Transaction
+    INSERT INTO finalized_transaction (transaction_id, canceled_at, request_id)
+    VALUES (arg_transaction_id, now(), arg_request_id);
+
+    UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
 
     return result;
 END

@@ -14,6 +14,17 @@
  * limitations under the License.
  */
 
-DROP FUNCTION complete_transaction;
-DROP FUNCTION cancel_transaction;
-DROP FUNCTION fail_transaction;
+package config
+
+import (
+	"os"
+
+	log "github.com/sirupsen/logrus"
+)
+
+func init() {
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetReportCaller(true)
+	log.SetLevel(log.WarnLevel)
+	log.SetOutput(os.Stdout)
+}

@@ -27,10 +27,7 @@ option go_package = "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 service Ledger {
   rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse) {}
   rpc InitializeAccount(InitializeAccountRequest) returns (InitializeAccountResponse) {}
-  rpc GetAccount(GetAccountRequest) returns (GetAccountResponse) {}
   rpc GetAccounts(GetAccountsRequest) returns (GetAccountsResponse) {}
-  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse) {}
-  rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse) {}
   rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionResponse) {}
   rpc PartialReleaseHold(PartialReleaseHoldRequest) returns (PartialReleaseHoldResponse) {}
   rpc FinalizeTransaction(FinalizeTransactionRequest) returns (FinalizeTransactionResponse) {}
@@ -58,38 +55,12 @@ message InitializeAccountResponse {
   AccountBalance accountBalance = 2;
 }
 
-message GetAccountRequest {
-  string userId = 1;
-  string currency = 2;
-}
-
-message GetAccountResponse {
-  Account account = 1;
-  AccountBalance accountBalance = 2;
-}
-
 message GetAccountsRequest {
   string userId = 1;
 }
 
 message GetAccountsResponse {
   repeated AccountAndBalance accounts = 1;
-}
-
-message GetBalanceRequest {
-  google.protobuf.StringValue id = 1;
-}
-
-message GetBalanceResponse {
-  AccountBalance accountBalance = 1;
-}
-
-message GetBalancesRequest {
-  string accountId = 1;
-}
-
-message GetBalancesResponse {
-  repeated AccountBalance accountBalances = 1;
 }
 
 message CreateTransactionRequest {

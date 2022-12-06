@@ -1,1 +1,0 @@
-DROP FUNCTION get_account_and_latest_balance;

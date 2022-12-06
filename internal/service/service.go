@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
-DROP FUNCTION complete_transaction;
-DROP FUNCTION cancel_transaction;
-DROP FUNCTION fail_transaction;
+package service
+
+import (
+	"github.com/coinbase-samples/ib-ledger-go/internal/repository"
+	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
+)
+
+type Service struct {
+	api.UnimplementedLedgerServer
+	Repository repository.Repository
+}
+
+func NewService(rep repository.Repository) *Service {
+	return &Service{Repository: rep}
+}

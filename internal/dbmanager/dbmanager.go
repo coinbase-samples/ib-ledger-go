@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
-DROP FUNCTION complete_transaction;
-DROP FUNCTION cancel_transaction;
-DROP FUNCTION fail_transaction;
+package dbmanager
+
+import "context"
+
+type DBManager interface {
+    Query(ctx context.Context, dest interface{}, query string, args ...interface{}) error
+}
+
