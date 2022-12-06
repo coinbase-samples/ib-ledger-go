@@ -53,8 +53,8 @@ type TransactionResult struct {
 type GetAccountResult struct {
 	AccountId uuid.UUID `db:"account_id"`
 	Currency  string    `db:"currency"`
-	Balance   uint64    `db:"balance"`
-	Hold      uint64    `db:"hold"`
-	Available uint64    `db:"available"`
+	Balance   string `db:"balance"`
+	Hold      string    `db:"hold"`
+	Available string    `db:"available"`
 	CreatedAt time.Time `db:"created_at"`
 }

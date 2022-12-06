@@ -22,7 +22,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/coinbase-samples/ib-ledger-go/internal/config"
+	"github.com/coinbase-samples/ib-ledger-go/config"
 	"github.com/coinbase-samples/ib-ledger-go/internal/dbmanager"
 	"github.com/coinbase-samples/ib-ledger-go/internal/repository"
 	"github.com/coinbase-samples/ib-ledger-go/internal/service"
