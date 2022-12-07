@@ -27,7 +27,7 @@ import (
 
 func TestCreateTransactionAccountNotFound(t *testing.T) {
 	ctx := context.Background()
-    ledgerClient := newLedgerServiceClient(ctx, t)
+	ledgerClient := newLedgerServiceClient(ctx, t)
 
 	_, err := ledgerClient.CreateTransaction(ctx, &ledger.CreateTransactionRequest{
 		OrderId: "5AFD5F86-AF2C-45D8-8D92-105EC153A0C6",
@@ -46,7 +46,6 @@ func TestCreateTransactionAccountNotFound(t *testing.T) {
 	})
 
 	if err == nil {
-        t.Fatal("expected CreateTransaction with CELO account to fail")
+		t.Fatal("expected CreateTransaction with CELO account to fail")
 	}
 }
-

@@ -14,30 +14,6 @@
  * limitations under the License.
  */
 
-CREATE OR REPLACE FUNCTION get_unreleased_hold(
-    arg_transaction_id UUID,
-    arg_account_id UUID
-) RETURNS hold
-    LANGUAGE plpgsql
-AS
-$$
-DECLARE
-    result_hold hold;
-BEGIN
-    SELECT *
-    FROM hold
-    WHERE hold.transaction_id = arg_transaction_id
-      AND hold.account_id = arg_account_id
-      AND NOT EXISTS(
-            SELECT hold_id
-            FROM released_hold
-            WHERE released_hold.hold_id = hold.id)
-    INTO result_hold;
-
-    return result_hold;
-END
-$$;
-
 CREATE TYPE transaction_result AS
 (
     hold_id             UUID,
@@ -104,7 +80,13 @@ BEGIN
     END IF;
 
     SELECT *
-    FROM get_unreleased_hold(temp_transaction.id, temp_transaction.sender_id)
+    FROM hold
+    WHERE hold.transaction_id = arg_transaction_id
+      AND hold.account_id = arg_account_id
+      AND NOT EXISTS(
+            SELECT hold_id
+            FROM released_hold
+            WHERE released_hold.hold_id = hold.id)
     INTO temp_hold;
 
     IF NOT FOUND THEN

@@ -137,17 +137,6 @@
         }
       }
     },
-    "v1GetAccountResponse": {
-      "type": "object",
-      "properties": {
-        "account": {
-          "$ref": "#/definitions/v1Account"
-        },
-        "accountBalance": {
-          "$ref": "#/definitions/v1AccountBalance"
-        }
-      }
-    },
     "v1GetAccountsResponse": {
       "type": "object",
       "properties": {
@@ -155,25 +144,6 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1AccountAndBalance"
-          }
-        }
-      }
-    },
-    "v1GetBalanceResponse": {
-      "type": "object",
-      "properties": {
-        "accountBalance": {
-          "$ref": "#/definitions/v1AccountBalance"
-        }
-      }
-    },
-    "v1GetBalancesResponse": {
-      "type": "object",
-      "properties": {
-        "accountBalances": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1AccountBalance"
           }
         }
       }

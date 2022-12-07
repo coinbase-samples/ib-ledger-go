@@ -18,13 +18,9 @@ package test
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"testing"
 
 	ledger "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
-
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func FailTransactionSucceedsTest(t *testing.T) {
@@ -32,79 +28,68 @@ func FailTransactionSucceedsTest(t *testing.T) {
 
 	ledgerClient := newLedgerServiceClient(ctx, t)
 
-	transactionRes, err := ledgerClient.CreateTransaction(ctx, &ledger.CreateTransactionRequest{
-		OrderId: "CD4A64A6-6C88-4EBD-B7B2-F57DC7202D70",
-		Sender: &ledger.Account{
-			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
-			Currency: "USD",
-		},
-		Receiver: &ledger.Account{
-			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
-			Currency: "ETH",
-		},
-		TotalAmount:     "1000",
-		FeeAmount:       &wrapperspb.StringValue{Value: "5"},
-		TransactionType: ledger.TransactionType_TRANSFER,
-		RequestId:       &wrapperspb.StringValue{Value: "27AA0E33-FC64-4D80-A811-C9BB3416692A"},
+	orderId := "F2F83699-C5BD-405D-9ACE-1FAD2A3DEB44"
+	createTransactionRequestId := "D6F45D7D-24E4-435A-ADF7-1BE9BDD081DE"
+
+	createTransactionAndConfirmHolds(ledgerClient, ctx, t, orderId, createTransactionRequestId)
+
+	senderExpectedBalance := &ledger.AccountAndBalance{
+		Currency:  "USD",
+		Balance:   "100000",
+		Hold:      "1000",
+		Available: "99000",
+	}
+	receiverExpectedBalance := &ledger.AccountAndBalance{
+		Currency:  "ETH",
+		Balance:   "100000",
+		Hold:      "0",
+		Available: "100000",
+	}
+
+	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
+
+	partialReleaseHoldAndConfirmSuccessful(ledgerClient, ctx, t, &ledger.PartialReleaseHoldRequest{
+		OrderId:        orderId,
+		RequestId:      "4FC0EA00-1709-491B-BFD3-7EA85B9C7447",
+		SenderAmount:   "1",
+		ReceiverAmount: "10",
 	})
 
-	if err != nil {
-		log.Print(err)
-		log.Fatalf("unable to create transaction")
+	senderExpectedBalance = &ledger.AccountAndBalance{
+		Currency:  "USD",
+		Balance:   "99999",
+		Hold:      "999",
+		Available: "99000",
 	}
-
-	output, err := ledgerClient.GetAccounts(ctx, &ledger.GetAccountsRequest{
-		UserId: "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
-	})
-
-	if err != nil {
-		log.Print(err)
-		log.Fatalf("unable to get accounts")
+	receiverExpectedBalance = &ledger.AccountAndBalance{
+		Currency:  "ETH",
+		Balance:   "100010",
+		Hold:      "0",
+		Available: "100010",
 	}
+	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
 
-	for _, a := range output.Accounts {
-		fmt.Println(fmt.Sprintf("accountId: %s - currency: %s - balance: %s, hold: %s, available: %s", a.AccountId, a.Currency, a.Balance, a.Hold, a.Available))
-	}
-
-	_, err = ledgerClient.PartialReleaseHold(ctx, &ledger.PartialReleaseHoldRequest{
-		OrderId:         transactionRes.Transaction.Id,
-		RequestId:       "4FC0EA00-1709-491B-BFD3-7EA85B9C7447",
-		SenderAmount:    "1",
-		ReceiverAmount:  "10",
-		VenueFeeAmount:  &wrapperspb.StringValue{Value: "1"},
-		RetailFeeAmount: &wrapperspb.StringValue{Value: "1"},
-	})
-
-	if err != nil {
-		log.Print(err)
-		log.Fatalf("unable to partial release hold")
-	}
-
-	_, err = ledgerClient.FinalizeTransaction(ctx, &ledger.FinalizeTransactionRequest{
-		OrderId:         transactionRes.Transaction.Id,
+	_, err := ledgerClient.FinalizeTransaction(ctx, &ledger.FinalizeTransactionRequest{
+		OrderId:         orderId,
 		RequestId:       "28367E08-98A4-4614-9FA6-FCD830CCA9F7",
 		FinalizedStatus: ledger.TransactionStatus_FAILED,
-		SenderAmount:    &wrapperspb.StringValue{Value: "999"},
-		ReceiverAmount:  &wrapperspb.StringValue{Value: "56"},
-		VenueFeeAmount:  &wrapperspb.StringValue{Value: "1"},
-		RetailFeeAmount: &wrapperspb.StringValue{Value: "2"},
 	})
 
 	if err != nil {
-		log.Print(err)
-		log.Fatalf("unable to complete transaction")
+		t.Fatalf("unable to fail transaction: %v", err.Error())
 	}
 
-	output, err = ledgerClient.GetAccounts(ctx, &ledger.GetAccountsRequest{
-		UserId: "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
-	})
-
-	if err != nil {
-		log.Print(err)
-		log.Fatalf("unable to get accounts")
+	senderExpectedBalance = &ledger.AccountAndBalance{
+		Currency:  "USD",
+		Balance:   "99999",
+		Hold:      "0",
+		Available: "99999",
 	}
-
-	for _, a := range output.Accounts {
-		fmt.Println(fmt.Sprintf("accountId: %s - currency: %s - balance: %s, hold: %s, available: %s", a.AccountId, a.Currency, a.Balance, a.Hold, a.Available))
+	receiverExpectedBalance = &ledger.AccountAndBalance{
+		Currency:  "ETH",
+		Balance:   "100010",
+		Hold:      "0",
+		Available: "100010",
 	}
+	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
 }
