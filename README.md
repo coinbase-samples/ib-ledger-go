@@ -20,6 +20,7 @@ brew install golang-migrate
 * [Docker](https://docs.docker.com/get-docker/) - Containers are used to run the Postgres Database locally. 
 Installation instructions unnecessary as you probably have this already installed. If not, follow the link and download Docker.
 
+## Running Ledger
 To start up the local server, run the following:
 ```
 make start-local
