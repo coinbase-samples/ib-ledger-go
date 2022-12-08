@@ -30,55 +30,54 @@ type MockRepository struct {
 }
 
 var (
-    CompleteTransactionUuidNotFound = "4AC6E407-1D8E-4339-BA1C-862ACC58AC5E"
-    FailTransactionUuidNotFound = "20032259-738B-40A7-AAD7-306B69AF88D4"
-    CancelTransactionUuidNotFound = "E6096F2D-C706-42B6-B0E5-D7DD644ED079"
+	CompleteTransactionUuidNotFound = "4AC6E407-1D8E-4339-BA1C-862ACC58AC5E"
+	FailTransactionUuidNotFound     = "20032259-738B-40A7-AAD7-306B69AF88D4"
+	CancelTransactionUuidNotFound   = "E6096F2D-C706-42B6-B0E5-D7DD644ED079"
 )
 
 func (m *MockRepository) InitializeAccount(ctx context.Context, request *api.InitializeAccountRequest) (*model.InitializeAccountResult, error) {
-    return &model.InitializeAccountResult{}, nil
+	return &model.InitializeAccountResult{}, nil
 }
 
 func (m *MockRepository) CreateTransaction(ctx context.Context, request *api.CreateTransactionRequest) (*model.CreateTransactionResult, error) {
-    return &model.CreateTransactionResult{}, nil
+	return &model.CreateTransactionResult{}, nil
 }
 
 func (m *MockRepository) PartialReleaseHold(ctx context.Context, request *api.PartialReleaseHoldRequest) (*model.TransactionResult, error) {
-    return &model.TransactionResult{}, nil
+	return &model.TransactionResult{}, nil
 }
 
 func (m *MockRepository) CompleteTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
-    if request.OrderId == CompleteTransactionUuidNotFound {
-        return nil, ledgererr.New(codes.NotFound, "transaction not found")
-    }
+	if request.OrderId == CompleteTransactionUuidNotFound {
+		return nil, ledgererr.New(codes.NotFound, "transaction not found")
+	}
 
-    return &model.TransactionResult{}, nil
+	return &model.TransactionResult{}, nil
 }
 
 func (m *MockRepository) FailTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
-    if request.OrderId == FailTransactionUuidNotFound {
-        return nil, ledgererr.New(codes.NotFound, "transaction not found")
-    }
+	if request.OrderId == FailTransactionUuidNotFound {
+		return nil, ledgererr.New(codes.NotFound, "transaction not found")
+	}
 
-    return &model.TransactionResult{}, nil
+	return &model.TransactionResult{}, nil
 }
 
 func (m *MockRepository) CancelTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
-    if request.OrderId == CancelTransactionUuidNotFound {
-        return nil, ledgererr.New(codes.NotFound, "transaction not found")
-    }
+	if request.OrderId == CancelTransactionUuidNotFound {
+		return nil, ledgererr.New(codes.NotFound, "transaction not found")
+	}
 
-    return &model.TransactionResult{}, nil
+	return &model.TransactionResult{}, nil
 }
 
 func (m *MockRepository) GetAllAccountsAndMostRecentBalances(ctx context.Context, userId string) ([]*model.GetAccountResult, error) {
-    return []*model.GetAccountResult{{}}, nil
+	return []*model.GetAccountResult{{}}, nil
 
 }
 
-func NewTestService() (*Service) {
-    rep := &MockRepository{}
+func NewTestService() *Service {
+	rep := &MockRepository{}
 
-    return NewService(rep)
+	return NewService(rep)
 }
-

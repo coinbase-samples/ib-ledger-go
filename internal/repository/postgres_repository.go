@@ -65,7 +65,7 @@ var (
 )
 
 type PostgresRepository struct {
-    DBManager dbmanager.DBManager
+	DBManager dbmanager.DBManager
 }
 
 func NewPostgresHandler(dbmanager dbmanager.DBManager) *PostgresRepository {
@@ -78,21 +78,23 @@ func (r *PostgresRepository) handleErrors(err error) error {
 	if errors.As(err, &pgErr) {
 		msg := pgErr.Message
 		log.Errorf("postgres error - code: %v - message: %v", pgErr.SQLState(), msg)
-        switch msg {
-            case "insufficient available balance": 
-			    return ledgererr.New(codes.InvalidArgument, "insufficient balance for transaction")
-            case "sender account missing":
-            case "receiver account missing": 
-			    return ledgererr.New(codes.NotFound, "account not found")
-            case "transaction not found":
-                return ledgererr.New(codes.NotFound, msg)
-            case "no unreleased hold found for transaction":
-                return ledgererr.New(codes.InvalidArgument, msg)
-            default:
-			    return ledgererr.New(codes.Internal, "postgres internal failure")
+		switch msg {
+		case "insufficient available balance":
+			return ledgererr.New(codes.InvalidArgument, "insufficient balance for transaction")
+		case "sender account missing":
+		case "receiver account missing":
+			return ledgererr.New(codes.NotFound, "account not found")
+		case "transaction not found":
+			return ledgererr.New(codes.NotFound, msg)
+		case "no unreleased hold found for transaction":
+			return ledgererr.New(codes.InvalidArgument, msg)
+		case "all releases have not been ledgered":
+			return ledgererr.New(codes.FailedPrecondition, msg)
+		default:
+			return ledgererr.New(codes.Internal, "postgres internal failure")
 		}
 	}
-    log.Error(err.Error())
+	log.Error(err.Error())
 	return ledgererr.FromError(err)
 }
 

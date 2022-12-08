@@ -15,5 +15,4 @@
  */
 
 DROP FUNCTION partial_release_hold;
-DROP FUNCTION get_unreleased_hold;
 DROP TYPE transaction_result;
