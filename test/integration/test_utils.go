@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func newLedgerServiceClient(ctx context.Context, t *testing.T) ledger.LedgerClient {
@@ -29,28 +28,15 @@ func newLedgerServiceClient(ctx context.Context, t *testing.T) ledger.LedgerClie
 	return ledger.NewLedgerClient(conn)
 }
 
-func createTransactionAndConfirmHolds(l ledger.LedgerClient, ctx context.Context, t *testing.T, orderId string, requestId string) {
-	transactionResult, err := l.CreateTransaction(ctx, &ledger.CreateTransactionRequest{
-		OrderId: orderId,
-		Sender: &ledger.Account{
-			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
-			Currency: "USD",
-		},
-		Receiver: &ledger.Account{
-			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
-			Currency: "ETH",
-		},
-		TotalAmount:     "1000",
-		TransactionType: ledger.TransactionType_TRANSFER,
-		RequestId:       &wrapperspb.StringValue{Value: requestId},
-	})
+func createTransactionAndConfirmHolds(l ledger.LedgerClient, ctx context.Context, t *testing.T, req *ledger.CreateTransactionRequest) {
+	transactionResult, err := l.CreateTransaction(ctx, req)
 
 	if err != nil {
 		t.Fatalf("unable to create transaction: %v", err.Error())
 	}
 
-	assert.Equal(t, orderId, strings.ToUpper(transactionResult.Transaction.Id))
-	assert.Equal(t, requestId, strings.ToUpper(transactionResult.Transaction.RequestId))
+	assert.Equal(t, req.OrderId, strings.ToUpper(transactionResult.Transaction.Id))
+	assert.Equal(t, req.RequestId.Value, strings.ToUpper(transactionResult.Transaction.RequestId))
 
 }
 

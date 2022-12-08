@@ -22,17 +22,31 @@ import (
 
 	ledger "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func TestCompleteTransaction(t *testing.T) {
+func TestSuccessfulCompleteTransaction(t *testing.T) {
 	ctx := context.Background()
 
 	ledgerClient := newLedgerServiceClient(ctx, t)
 
 	orderId := "10D0DF21-88E0-4076-8CD7-58F761E26F40"
-	createTransactionRequestId := "85688730-9A34-4F9C-8475-7521B957F164"
+	createTransactionRequest := &ledger.CreateTransactionRequest{
+		OrderId: orderId,
+		Sender: &ledger.Account{
+			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
+			Currency: "USD",
+		},
+		Receiver: &ledger.Account{
+			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
+			Currency: "ETH",
+		},
+		TotalAmount:     "1000",
+		TransactionType: ledger.TransactionType_TRANSFER,
+		RequestId:       &wrapperspb.StringValue{Value: "85688730-9A34-4F9C-8475-7521B957F164"},
+	}
 
-	createTransactionAndConfirmHolds(ledgerClient, ctx, t, orderId, createTransactionRequestId)
+	createTransactionAndConfirmHolds(ledgerClient, ctx, t, createTransactionRequest)
 
 	senderExpectedBalance := &ledger.AccountAndBalance{
 		Currency:  "USD",
@@ -49,71 +63,51 @@ func TestCompleteTransaction(t *testing.T) {
 
 	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
 
-	_, err := ledgerClient.PartialReleaseHold(ctx, &ledger.PartialReleaseHoldRequest{
+	partialReleaseHoldAndConfirmSuccessful(ledgerClient, ctx, t, &ledger.PartialReleaseHoldRequest{
 		OrderId:        orderId,
 		RequestId:      "11A40B5B-74AA-4CBD-A04B-AADC4F0487E8",
 		SenderAmount:   "1",
 		ReceiverAmount: "10",
 	})
 
-	if err != nil {
-		t.Fatalf("unable to partial release hold")
+	senderExpectedBalance = &ledger.AccountAndBalance{
+		Currency:  "USD",
+		Balance:   "99999",
+		Hold:      "999",
+		Available: "99000",
+	}
+	receiverExpectedBalance = &ledger.AccountAndBalance{
+		Currency:  "ETH",
+		Balance:   "100010",
+		Hold:      "0",
+		Available: "100010",
 	}
 
-	output, err := ledgerClient.GetAccounts(ctx, &ledger.GetAccountsRequest{
-		UserId: "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
-	})
+	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
 
-	if err != nil {
-		t.Fatalf("complete transaction test: unable get accounts: %v", err.Error())
-	}
-
-	for _, a := range output.Accounts {
-		if a.Currency == "USD" {
-			assert.Equal(t, "99999", a.Balance)
-			assert.Equal(t, "999", a.Hold)
-			assert.Equal(t, "99000", a.Available)
-		}
-		if a.Currency == "ETH" {
-			assert.Equal(t, "100010", a.Balance)
-			assert.Equal(t, "0", a.Hold)
-			assert.Equal(t, "100010", a.Available)
-		}
-	}
-
-	_, err = ledgerClient.PartialReleaseHold(ctx, &ledger.PartialReleaseHoldRequest{
+	partialReleaseHoldAndConfirmSuccessful(ledgerClient, ctx, t, &ledger.PartialReleaseHoldRequest{
 		OrderId:        orderId,
 		RequestId:      "7795D23A-D273-442B-B588-CD718E11E2E5",
 		SenderAmount:   "999",
 		ReceiverAmount: "10",
 	})
 
-	if err != nil {
-		t.Fatalf("unable to partial release hold")
+	senderExpectedBalance = &ledger.AccountAndBalance{
+		Currency:  "USD",
+		Balance:   "99000",
+		Hold:      "0",
+		Available: "99000",
+	}
+	receiverExpectedBalance = &ledger.AccountAndBalance{
+		Currency:  "ETH",
+		Balance:   "100020",
+		Hold:      "0",
+		Available: "100020",
 	}
 
-	output, err = ledgerClient.GetAccounts(ctx, &ledger.GetAccountsRequest{
-		UserId: "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
-	})
+	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
 
-	if err != nil {
-		t.Fatalf("complete transaction test: unable get accounts: %v", err.Error())
-	}
-
-	for _, a := range output.Accounts {
-		if a.Currency == "USD" {
-			assert.Equal(t, "99000", a.Balance)
-			assert.Equal(t, "0", a.Hold)
-			assert.Equal(t, "99000", a.Available)
-		}
-		if a.Currency == "ETH" {
-			assert.Equal(t, "100020", a.Balance)
-			assert.Equal(t, "0", a.Hold)
-			assert.Equal(t, "100020", a.Available)
-		}
-	}
-
-	_, err = ledgerClient.FinalizeTransaction(ctx, &ledger.FinalizeTransactionRequest{
+	finalizeResponse, err := ledgerClient.FinalizeTransaction(ctx, &ledger.FinalizeTransactionRequest{
 		OrderId:         orderId,
 		RequestId:       "E2586CC8-2879-48B2-83E2-F1F5CF87E248",
 		FinalizedStatus: ledger.TransactionStatus_COMPLETE,
@@ -123,24 +117,7 @@ func TestCompleteTransaction(t *testing.T) {
 		t.Fatalf("unable to complete transaction")
 	}
 
-	output, err = ledgerClient.GetAccounts(ctx, &ledger.GetAccountsRequest{
-		UserId: "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
-	})
+	assert.True(t, finalizeResponse.Successful)
 
-	if err != nil {
-		t.Fatalf("unable to get accounts")
-	}
-
-	for _, a := range output.Accounts {
-		if a.Currency == "USD" {
-			assert.Equal(t, "99000", a.Balance)
-			assert.Equal(t, "0", a.Hold)
-			assert.Equal(t, "99000", a.Available)
-		}
-		if a.Currency == "ETH" {
-			assert.Equal(t, "100020", a.Balance)
-			assert.Equal(t, "0", a.Hold)
-			assert.Equal(t, "100020", a.Available)
-		}
-	}
+	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
 }
