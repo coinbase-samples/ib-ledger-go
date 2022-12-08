@@ -81,8 +81,8 @@ BEGIN
 
     SELECT *
     FROM hold
-    WHERE hold.transaction_id = arg_transaction_id
-      AND hold.account_id = arg_account_id
+    WHERE hold.transaction_id = temp_transaction.id
+      AND hold.account_id = temp_transaction.sender_id
       AND NOT EXISTS(
             SELECT hold_id
             FROM released_hold
