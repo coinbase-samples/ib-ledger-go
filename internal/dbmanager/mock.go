@@ -20,6 +20,7 @@ import (
 	"context"
 )
 
+// To be used in unit testing
 type MockDBManager struct {
 }
 

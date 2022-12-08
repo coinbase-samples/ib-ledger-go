@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/coinbase-samples/ib-ledger-go/internal/repository"
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -48,7 +49,7 @@ func TestBadFinalizeTransactionType(t *testing.T) {
 func TestTransactionNotFoundCompleteTransaction(t *testing.T) {
 	service := NewTestService()
 	request := &api.FinalizeTransactionRequest{
-		OrderId:         CompleteTransactionUuidNotFound,
+		OrderId:         repository.CompleteTransactionUuidNotFound,
 		SenderAmount:    &wrapperspb.StringValue{Value: "1"},
 		FinalizedStatus: api.TransactionStatus_COMPLETE,
 	}
@@ -83,7 +84,7 @@ func TestSuccessfulCompleteTransaction(t *testing.T) {
 func TestTransactionNotFoundFailTransaction(t *testing.T) {
 	service := NewTestService()
 	request := &api.FinalizeTransactionRequest{
-		OrderId:         FailTransactionUuidNotFound,
+		OrderId:         repository.FailTransactionUuidNotFound,
 		SenderAmount:    &wrapperspb.StringValue{Value: "1"},
 		FinalizedStatus: api.TransactionStatus_FAILED,
 	}
@@ -118,7 +119,7 @@ func TestSuccessfulFailTransaction(t *testing.T) {
 func TestTransactionNotFoundCancelTransaction(t *testing.T) {
 	service := NewTestService()
 	request := &api.FinalizeTransactionRequest{
-		OrderId:         CancelTransactionUuidNotFound,
+		OrderId:         repository.CancelTransactionUuidNotFound,
 		SenderAmount:    &wrapperspb.StringValue{Value: "1"},
 		FinalizedStatus: api.TransactionStatus_CANCELED,
 	}
