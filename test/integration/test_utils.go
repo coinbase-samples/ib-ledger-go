@@ -46,38 +46,12 @@ func createTransactionAndConfirmHolds(l ledger.LedgerClient, ctx context.Context
 	})
 
 	if err != nil {
-		t.Fatalf(": unable to create transaction: %v", err.Error())
+		t.Fatalf("unable to create transaction: %v", err.Error())
 	}
 
 	assert.Equal(t, orderId, strings.ToUpper(transactionResult.Transaction.Id))
 	assert.Equal(t, requestId, strings.ToUpper(transactionResult.Transaction.RequestId))
 
-	output, err := l.GetAccounts(ctx, &ledger.GetAccountsRequest{
-		UserId: "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
-	})
-
-	if err != nil {
-		t.Fatalf("unable get accounts: %v", err.Error())
-	}
-
-	isUsdAccountPresent := false
-	isEthAccountPresent := false
-	for _, a := range output.Accounts {
-		if a.Currency == "USD" {
-			isUsdAccountPresent = true
-			assert.Equal(t, "100000", a.Balance)
-			assert.Equal(t, "1000", a.Hold)
-			assert.Equal(t, "99000", a.Available)
-		}
-		if a.Currency == "ETH" {
-			isEthAccountPresent = true
-			assert.Equal(t, "100000", a.Balance)
-			assert.Equal(t, "0", a.Hold)
-			assert.Equal(t, "100000", a.Available)
-		}
-	}
-	assert.True(t, isUsdAccountPresent)
-	assert.True(t, isEthAccountPresent)
 }
 
 func partialReleaseHoldAndConfirmSuccessful(l ledger.LedgerClient, ctx context.Context, t *testing.T, pr *ledger.PartialReleaseHoldRequest) {
