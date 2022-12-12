@@ -16,9 +16,9 @@
 
 CREATE OR REPLACE FUNCTION create_transaction_and_place_hold(
     arg_transaction_id UUID,
-    arg_sender_currency TEXT,
+    arg_sender_currency VARCHAR(64),
     arg_sender_user_id UUID,
-    arg_receiver_currency TEXT,
+    arg_receiver_currency VARCHAR(64),
     arg_receiver_user_id UUID,
     arg_request_id UUID,
     arg_amount NUMERIC,
@@ -51,7 +51,7 @@ BEGIN
     INTO temp_sender_account FOR
     UPDATE;
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'sender account missing';
+        RAISE EXCEPTION 'LGR402';
     END IF;
     SELECT *
     FROM account
@@ -67,7 +67,7 @@ BEGIN
     -- validate that we have sufficient balance to complete transaction
     SELECT * FROM get_latest_balance(temp_sender_account.id) INTO most_recent_balance;
     IF most_recent_balance.available < arg_amount THEN
-        RAISE EXCEPTION 'insufficient available balance';
+        RAISE EXCEPTION 'LGR501';
     end if;
 
     -- initialize the transaction
@@ -91,7 +91,7 @@ BEGIN
     UPDATE account SET user_id = temp_sender_account.user_id WHERE id = temp_sender_account.id;
     UPDATE account SET user_id = temp_receiver_account.user_id WHERE id = temp_receiver_account.id;
 
-    return result_transaction;
+    RETURN result_transaction;
 
 END
 $$;

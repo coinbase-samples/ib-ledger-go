@@ -19,7 +19,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"log"
 
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
@@ -29,10 +28,16 @@ import (
 )
 
 func (s *Service) InitializeAccount(ctx context.Context, req *api.InitializeAccountRequest) (*api.InitializeAccountResponse, error) {
+	l := ctxlogrus.Extract(ctx)
+
+	if err := req.Validate(); err != nil {
+		l.Debugf("invalid initialize account request: %v", req)
+		return nil, fmt.Errorf("ib-ledger-go: %w", err)
+	}
+
 	result, err := s.Repository.InitializeAccount(ctx, req)
 	if err != nil {
-		log.Printf("unable to initialize account %v", err)
-		return nil, err
+		return nil, fmt.Errorf("ib-ledger-go: %w", err)
 	}
 
 	response := &api.InitializeAccountResponse{
@@ -55,10 +60,14 @@ func (s *Service) InitializeAccount(ctx context.Context, req *api.InitializeAcco
 func (s *Service) GetAccounts(ctx context.Context, req *api.GetAccountsRequest) (*api.GetAccountsResponse, error) {
 	l := ctxlogrus.Extract(ctx)
 
+	if err := req.Validate(); err != nil {
+		l.Debugf("invalid get accounts request: %v", req)
+		return nil, fmt.Errorf("ib-ledger-go: %w", err)
+	}
+
 	results, err := s.Repository.GetAllAccountsAndMostRecentBalances(ctx, req.UserId)
 	if err != nil {
-		l.Errorf("unable to get accounts and balances for user: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("ib-ledger-go: %w", err)
 	}
 
 	var outputResults []*api.AccountAndBalance

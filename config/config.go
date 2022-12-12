@@ -20,16 +20,24 @@ import (
 	"fmt"
 
 	"github.com/spf13/viper"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type AppConfig struct {
-	Port        string `mapstructure:"PORT"`
-	DbCreds     string `mapstructure:"DB_CREDENTIALS"`
-	DbPort      string `mapstructure:"DB_PORT"`
-	DbHostname  string `mapstructure:"DB_HOSTNAME"`
-	Env         string `mapstructure:"ENV_NAME"`
-	LogLevel    string `mapstructure:"LOG_LEVEL"`
-	NetworkName string `mapstructure:"INTERNAL_API_HOSTNAME"`
+	Port               string `mapstructure:"PORT"`
+	DbCreds            string `mapstructure:"DB_CREDENTIALS"`
+	DbPort             string `mapstructure:"DB_PORT"`
+	DbHostname         string `mapstructure:"DB_HOSTNAME"`
+	Env                string `mapstructure:"ENV_NAME"`
+	LogLevel           string `mapstructure:"LOG_LEVEL"`
+	NetworkName        string `mapstructure:"INTERNAL_API_HOSTNAME"`
+	CoinbaseUsdAccount string `mapstructure:"COINBASE_USD_ACCOUNT"`
+	NeoworksUsdAccount string `mapstructure:"NEOWORKS_USD_ACCOUNT"`
+}
+
+func (a AppConfig) IsLocalEnv() bool {
+	return a.Env == "local"
 }
 
 func Setup(app *AppConfig) {
@@ -40,7 +48,7 @@ func Setup(app *AppConfig) {
 	viper.AutomaticEnv()
 	viper.AllowEmptyEnv(true)
 	// set defaults
-	viper.SetDefault("LOG_LEVEL", "warning")
+	viper.SetDefault("LOG_LEVEL", "debug")
 	viper.SetDefault("PORT", "8443")
 	viper.SetDefault("GRPC_PORT", "50002")
 	viper.SetDefault("ENV_NAME", "local")
@@ -56,5 +64,15 @@ func Setup(app *AppConfig) {
 	err = viper.Unmarshal(&app)
 	if err != nil {
 		fmt.Printf("Cannot parse env file %v\n", err)
+	}
+}
+
+func ValidateConfig(a AppConfig, l *log.Entry) {
+	if a.Env == "" {
+		l.Fatalln("no environment name set")
+	}
+
+	if a.CoinbaseUsdAccount == "" || a.NeoworksUsdAccount == "" {
+		l.Fatalln("fee accounts not set")
 	}
 }

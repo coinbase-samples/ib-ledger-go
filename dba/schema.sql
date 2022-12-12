@@ -328,7 +328,7 @@ BEGIN
     FOR
         UPDATE;
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'receiver account missing';
+        RAISE EXCEPTION 'LGR403';
     END IF;
 
     -- validate that we have sufficient balance to complete transaction
@@ -584,7 +584,7 @@ BEGIN
     INTO result_hold;
 
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'no unreleased hold found for transaction';
+        RAISE EXCEPTION 'LGR405';
     end if;
     return result_hold;
 END

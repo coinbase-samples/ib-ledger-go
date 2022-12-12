@@ -32,25 +32,12 @@ type PostgresDBManager struct {
 	Pool *pgxpool.Pool
 }
 
-func NewPostgresDBManager(app config.AppConfig) *PostgresDBManager {
-
-	if app.DbCreds == "" {
-		log.Fatalf("no environment variable set for DB_CREDENTIALS")
-	}
-
-	if app.DbHostname == "" {
-		log.Fatalf("no environment variable set for DB_HOSTNAME")
-	}
-
-	if app.DbPort == "" {
-		log.Fatalf("no environment variable set for DB_PORT")
-	}
+func NewPostgresDBManager(app *config.AppConfig, l *log.Entry) *PostgresDBManager {
 
 	var dbCredsJson map[string]interface{}
 	err := json.Unmarshal([]byte(app.DbCreds), &dbCredsJson)
-
 	if err != nil {
-		log.Fatalf("unable to unmarshal the cred string")
+		l.Fatalf("unable to unmarshal the cred string")
 	}
 
 	dbUsername := dbCredsJson["username"].(string)
@@ -58,15 +45,13 @@ func NewPostgresDBManager(app config.AppConfig) *PostgresDBManager {
 
 	dbUrl := fmt.Sprintf("postgres://%s:%s@%s:%s/ledger", dbUsername, dbPassword, app.DbHostname, app.DbPort)
 
-	if app.Env == "local" {
+	if app.IsLocalEnv() {
 		dbUrl += "?sslmode=disable"
 	}
 
-	log.Printf("attempting to connect to database with username: %v, hostname: %v, and port %v", dbUsername, app.DbHostname, app.DbPort)
 	pool, err := pgxpool.New(context.Background(), dbUrl)
-
 	if err != nil {
-		log.Fatalf("Failed to establish DB Pool: %v", err)
+		l.Fatalf("failed to establish DB Pool: %w", err)
 	}
 
 	return &PostgresDBManager{Pool: pool}

@@ -19,12 +19,15 @@ package config
 import (
 	"os"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
-func init() {
-	log.SetFormatter(&log.JSONFormatter{})
-	log.SetReportCaller(true)
-	log.SetLevel(log.WarnLevel)
-	log.SetOutput(os.Stdout)
+func LogInit(app AppConfig) *logrus.Entry {
+	logger := logrus.New()
+	logLevel, _ := logrus.ParseLevel(app.LogLevel)
+	logger.SetLevel(logLevel)
+	logger.SetFormatter(&logrus.JSONFormatter{})
+	logger.SetReportCaller(true)
+	logger.SetOutput(os.Stdout)
+	return logrus.NewEntry(logger)
 }

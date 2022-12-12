@@ -14,6 +14,17 @@
  * limitations under the License.
  */
 
+DROP INDEX user_accounts;
+DROP INDEX idem_user_account;
+DROP INDEX account_balance_index;
+DROP INDEX sender_transactions;
+DROP INDEX receiver_transactions;
+DROP INDEX transaction_entries;
+DROP INDEX request_entries;
+DROP INDEX account_entries;
+DROP INDEX transaction_holds;
+DROP INDEX request_holds;
+DROP INDEX account_holds;
 DROP TABLE entry;
 DROP TABLE finalized_transaction;
 DROP TABLE released_hold;

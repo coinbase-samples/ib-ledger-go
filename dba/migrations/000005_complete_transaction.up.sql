@@ -34,8 +34,8 @@ DECLARE
 BEGIN
     SELECT * FROM transaction WHERE id = arg_transaction_id INTO temp_transaction;
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'transaction not found';
-    end if;
+        RAISE EXCEPTION 'LGR404';
+    END IF;
 
     --Locking
     LOCK TABLE account IN ROW EXCLUSIVE MODE;
@@ -57,8 +57,8 @@ BEGIN
                                         AND account_id = temp_transaction.receiver_id);
         UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
         UPDATE account SET user_id = receiver_account.user_id WHERE id = receiver_account.id;
-        return result;
-    end if;
+        RETURN result;
+    END IF;
 
     SELECT *
     FROM hold
@@ -99,7 +99,7 @@ BEGIN
     UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
     UPDATE account SET user_id = receiver_account.user_id WHERE id = receiver_account.id;
 
-    return result;
+    RETURN result;
 END
 $$;
 
@@ -117,13 +117,13 @@ DECLARE
     sender_account             account;
     sender_most_recent_balance account_balance;
     temp_hold_amount           NUMERIC;
-    temp_sender_new_balance_id uuid;
+    temp_sender_new_balance_id UUID;
     result                     transaction_result;
 BEGIN
     SELECT * FROM transaction WHERE id = arg_transaction_id INTO temp_transaction;
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'transaction not found';
-    end if;
+        RAISE EXCEPTION 'LGR404';
+    END IF;
 
     --Locking
     LOCK TABLE account IN ROW EXCLUSIVE MODE;
@@ -143,8 +143,8 @@ BEGIN
                                       WHERE request_id = arg_request_id
                                         AND account_id = temp_transaction.receiver_id);
         UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
-        return result;
-    end if;
+        RETURN result;
+    END IF;
 
     SELECT *
     FROM hold
@@ -184,7 +184,7 @@ BEGIN
 
     UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
 
-    return result;
+    RETURN result;
 END
 $$;
 
@@ -207,8 +207,8 @@ DECLARE
 BEGIN
     SELECT * FROM transaction WHERE id = arg_transaction_id INTO temp_transaction;
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'transaction not found';
-    end if;
+        RAISE EXCEPTION 'LGR404';
+    END IF;
 
     --Locking
     LOCK TABLE account IN ROW EXCLUSIVE MODE;
@@ -228,8 +228,8 @@ BEGIN
                                       WHERE request_id = arg_request_id
                                         AND account_id = temp_transaction.receiver_id);
         UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
-        return result;
-    end if;
+        RETURN result;
+    END IF;
 
     SELECT *
     FROM hold
@@ -269,6 +269,6 @@ BEGIN
 
     UPDATE account SET user_id = sender_account.user_id WHERE id = sender_account.id;
 
-    return result;
+    RETURN result;
 END
 $$;

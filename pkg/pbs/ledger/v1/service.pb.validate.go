@@ -35,212 +35,6 @@ var (
 	_ = sort.Sort
 )
 
-// Validate checks the field values on HealthCheckRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *HealthCheckRequest) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on HealthCheckRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// HealthCheckRequestMultiError, or nil if none found.
-func (m *HealthCheckRequest) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *HealthCheckRequest) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if len(errors) > 0 {
-		return HealthCheckRequestMultiError(errors)
-	}
-
-	return nil
-}
-
-// HealthCheckRequestMultiError is an error wrapping multiple validation errors
-// returned by HealthCheckRequest.ValidateAll() if the designated constraints
-// aren't met.
-type HealthCheckRequestMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m HealthCheckRequestMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m HealthCheckRequestMultiError) AllErrors() []error { return m }
-
-// HealthCheckRequestValidationError is the validation error returned by
-// HealthCheckRequest.Validate if the designated constraints aren't met.
-type HealthCheckRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e HealthCheckRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e HealthCheckRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e HealthCheckRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e HealthCheckRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e HealthCheckRequestValidationError) ErrorName() string {
-	return "HealthCheckRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e HealthCheckRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sHealthCheckRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = HealthCheckRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = HealthCheckRequestValidationError{}
-
-// Validate checks the field values on HealthCheckResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *HealthCheckResponse) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on HealthCheckResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// HealthCheckResponseMultiError, or nil if none found.
-func (m *HealthCheckResponse) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *HealthCheckResponse) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Status
-
-	if len(errors) > 0 {
-		return HealthCheckResponseMultiError(errors)
-	}
-
-	return nil
-}
-
-// HealthCheckResponseMultiError is an error wrapping multiple validation
-// errors returned by HealthCheckResponse.ValidateAll() if the designated
-// constraints aren't met.
-type HealthCheckResponseMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m HealthCheckResponseMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m HealthCheckResponseMultiError) AllErrors() []error { return m }
-
-// HealthCheckResponseValidationError is the validation error returned by
-// HealthCheckResponse.Validate if the designated constraints aren't met.
-type HealthCheckResponseValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e HealthCheckResponseValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e HealthCheckResponseValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e HealthCheckResponseValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e HealthCheckResponseValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e HealthCheckResponseValidationError) ErrorName() string {
-	return "HealthCheckResponseValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e HealthCheckResponseValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sHealthCheckResponse.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = HealthCheckResponseValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = HealthCheckResponseValidationError{}
-
 // Validate checks the field values on InitializeAccountRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -263,11 +57,40 @@ func (m *InitializeAccountRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for PortfolioId
+	if utf8.RuneCountInString(m.GetPortfolioId()) != 36 {
+		err := InitializeAccountRequestValidationError{
+			field:  "PortfolioId",
+			reason: "value length must be 36 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 
-	// no validation rules for UserId
+	}
 
-	// no validation rules for Currency
+	if utf8.RuneCountInString(m.GetUserId()) != 36 {
+		err := InitializeAccountRequestValidationError{
+			field:  "UserId",
+			reason: "value length must be 36 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
+
+	if utf8.RuneCountInString(m.GetCurrency()) < 3 {
+		err := InitializeAccountRequestValidationError{
+			field:  "Currency",
+			reason: "value length must be at least 3 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(errors) > 0 {
 		return InitializeAccountRequestMultiError(errors)
@@ -371,6 +194,17 @@ func (m *InitializeAccountResponse) validate(all bool) error {
 
 	var errors []error
 
+	if m.GetAccount() == nil {
+		err := InitializeAccountResponseValidationError{
+			field:  "Account",
+			reason: "value is required",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if all {
 		switch v := interface{}(m.GetAccount()).(type) {
 		case interface{ ValidateAll() error }:
@@ -398,6 +232,17 @@ func (m *InitializeAccountResponse) validate(all bool) error {
 				cause:  err,
 			}
 		}
+	}
+
+	if m.GetAccountBalance() == nil {
+		err := InitializeAccountResponseValidationError{
+			field:  "AccountBalance",
+			reason: "value is required",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if all {
@@ -531,7 +376,17 @@ func (m *GetAccountsRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for UserId
+	if utf8.RuneCountInString(m.GetUserId()) != 36 {
+		err := GetAccountsRequestValidationError{
+			field:  "UserId",
+			reason: "value length must be 36 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
 
 	if len(errors) > 0 {
 		return GetAccountsRequestMultiError(errors)
@@ -771,7 +626,28 @@ func (m *CreateTransactionRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for OrderId
+	if utf8.RuneCountInString(m.GetOrderId()) != 36 {
+		err := CreateTransactionRequestValidationError{
+			field:  "OrderId",
+			reason: "value length must be 36 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
+
+	if m.GetSender() == nil {
+		err := CreateTransactionRequestValidationError{
+			field:  "Sender",
+			reason: "value is required",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if all {
 		switch v := interface{}(m.GetSender()).(type) {
@@ -800,6 +676,17 @@ func (m *CreateTransactionRequest) validate(all bool) error {
 				cause:  err,
 			}
 		}
+	}
+
+	if m.GetReceiver() == nil {
+		err := CreateTransactionRequestValidationError{
+			field:  "Receiver",
+			reason: "value is required",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if all {
@@ -1126,9 +1013,29 @@ func (m *PartialReleaseHoldRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for OrderId
+	if utf8.RuneCountInString(m.GetOrderId()) != 36 {
+		err := PartialReleaseHoldRequestValidationError{
+			field:  "OrderId",
+			reason: "value length must be 36 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 
-	// no validation rules for RequestId
+	}
+
+	if utf8.RuneCountInString(m.GetRequestId()) != 36 {
+		err := PartialReleaseHoldRequestValidationError{
+			field:  "RequestId",
+			reason: "value length must be 36 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
 
 	// no validation rules for SenderAmount
 
@@ -1427,9 +1334,29 @@ func (m *FinalizeTransactionRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for OrderId
+	if utf8.RuneCountInString(m.GetOrderId()) != 36 {
+		err := FinalizeTransactionRequestValidationError{
+			field:  "OrderId",
+			reason: "value length must be 36 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 
-	// no validation rules for RequestId
+	}
+
+	if utf8.RuneCountInString(m.GetRequestId()) != 36 {
+		err := FinalizeTransactionRequestValidationError{
+			field:  "RequestId",
+			reason: "value length must be 36 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
 
 	// no validation rules for FinalizedStatus
 

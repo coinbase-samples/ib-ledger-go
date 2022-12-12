@@ -49,7 +49,7 @@ func (m *MockRepository) PartialReleaseHold(ctx context.Context, request *api.Pa
 
 func (m *MockRepository) CompleteTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
 	if request.OrderId == CompleteTransactionUuidNotFound {
-		return nil, ledgererr.New(codes.NotFound, "transaction not found")
+		return nil, ledgererr.New(codes.NotFound, "LGR404")
 	}
 
 	return &model.TransactionResult{}, nil
@@ -57,7 +57,7 @@ func (m *MockRepository) CompleteTransaction(ctx context.Context, request *api.F
 
 func (m *MockRepository) FailTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
 	if request.OrderId == FailTransactionUuidNotFound {
-		return nil, ledgererr.New(codes.NotFound, "transaction not found")
+		return nil, ledgererr.New(codes.NotFound, "LGR404")
 	}
 
 	return &model.TransactionResult{}, nil
@@ -65,7 +65,7 @@ func (m *MockRepository) FailTransaction(ctx context.Context, request *api.Final
 
 func (m *MockRepository) CancelTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
 	if request.OrderId == CancelTransactionUuidNotFound {
-		return nil, ledgererr.New(codes.NotFound, "transaction not found")
+		return nil, ledgererr.New(codes.NotFound, "LGR404")
 	}
 
 	return &model.TransactionResult{}, nil

@@ -23,23 +23,29 @@ import (
 	ledgererr "github.com/coinbase-samples/ib-ledger-go/internal/errors"
 	"github.com/coinbase-samples/ib-ledger-go/internal/utils"
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
-	log "github.com/sirupsen/logrus"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (s *Service) CreateTransaction(ctx context.Context, req *api.CreateTransactionRequest) (*api.CreateTransactionResponse, error) {
+	l := ctxlogrus.Extract(ctx)
+
+	if err := req.Validate(); err != nil {
+		l.Debugf("invalid create transaction request: %v", req)
+		return nil, fmt.Errorf("ib-ledger-go: %w", err)
+	}
+
 	result, err := s.Repository.CreateTransaction(ctx, req)
 	if err != nil {
-		log.Errorf("unable to create transaction: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("ib-ledger-go: %w", err)
 	}
 	transactionType, ok := utils.GetTransactionTypeFromString(result.TransactionType)
 	if !ok {
-		return nil, ledgererr.New(codes.InvalidArgument, fmt.Sprintf("bad request: transaction type not supported: %v", result.TransactionType))
+		return nil, ledgererr.New(codes.InvalidArgument, fmt.Sprintf("ib-ledger-go: bad request: transaction type not supported: %v", result.TransactionType))
 	}
-	response := &api.CreateTransactionResponse{
+	return &api.CreateTransactionResponse{
 		Transaction: &api.Transaction{
 			Id:                result.Id.String(),
 			SenderId:          result.SenderId.String(),
@@ -49,48 +55,55 @@ func (s *Service) CreateTransaction(ctx context.Context, req *api.CreateTransact
 			RequestId:         result.RequestId.String(),
 			TransactionStatus: api.TransactionStatus_PENDING,
 		},
-	}
-	return response, nil
+	}, nil
 }
 
 func (s *Service) PartialReleaseHold(ctx context.Context, req *api.PartialReleaseHoldRequest) (*api.PartialReleaseHoldResponse, error) {
+	l := ctxlogrus.Extract(ctx)
+
+	if err := req.Validate(); err != nil {
+		l.Debugf("invalid partial release hold request: %v", req)
+		return nil, fmt.Errorf("ib-ledger-go: %w", err)
+	}
+
 	_, err := s.Repository.PartialReleaseHold(ctx, req)
 	if err != nil {
-		log.Errorf("unable to partial release hold: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("ib-ledger-go: %w", err)
 	}
-	response := &api.PartialReleaseHoldResponse{
+	return &api.PartialReleaseHoldResponse{
 		Successful: true,
-	}
-	return response, nil
+	}, nil
 }
 
 func (s *Service) FinalizeTransaction(ctx context.Context, req *api.FinalizeTransactionRequest) (*api.FinalizeTransactionResponse, error) {
+	l := ctxlogrus.Extract(ctx)
+
+	if err := req.Validate(); err != nil {
+		l.Debugf("invalid finalize transaction request: %v", req)
+		return nil, fmt.Errorf("ib-ledger-go: %w", err)
+	}
+
 	switch req.FinalizedStatus {
 	case api.TransactionStatus_COMPLETE:
 		_, err := s.Repository.CompleteTransaction(ctx, req)
 		if err != nil {
-			log.Errorf("unable to complete transaction: %v", err)
-			return nil, err
+			return nil, fmt.Errorf("ib-ledger-go: %w", err)
 		}
 	case api.TransactionStatus_FAILED:
 		_, err := s.Repository.FailTransaction(ctx, req)
 		if err != nil {
-			log.Errorf("unable to fail transaction: %v", err)
-			return nil, err
+			return nil, fmt.Errorf("ib-ledger-go: %w", err)
 		}
 	case api.TransactionStatus_CANCELED:
 		_, err := s.Repository.CancelTransaction(ctx, req)
 		if err != nil {
-			log.Errorf("unable to cancel transaction: %v", err)
-			return nil, err
+			return nil, fmt.Errorf("ib-ledger-go: %w", err)
 		}
 	default:
-		return nil, ledgererr.New(codes.InvalidArgument, fmt.Sprintf("finalize transaction: unable to finalize pending transaction - transaction: %v", req.OrderId))
+		return nil, ledgererr.New(codes.InvalidArgument, fmt.Sprintf("ib-ledger-go: finalize transaction: unable to finalize pending transaction - transaction: %v", req.OrderId))
 	}
 
-	response := &api.FinalizeTransactionResponse{
+	return &api.FinalizeTransactionResponse{
 		Successful: true,
-	}
-	return response, nil
+	}, nil
 }

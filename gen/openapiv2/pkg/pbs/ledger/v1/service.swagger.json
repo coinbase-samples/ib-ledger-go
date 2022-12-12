@@ -17,15 +17,6 @@
   ],
   "paths": {},
   "definitions": {
-    "HealthCheckResponseServingStatus": {
-      "type": "string",
-      "enum": [
-        "UNKNOWN",
-        "SERVING",
-        "NOT_SERVING"
-      ],
-      "default": "UNKNOWN"
-    },
     "protobufAny": {
       "type": "object",
       "properties": {
@@ -145,14 +136,6 @@
           "items": {
             "$ref": "#/definitions/v1AccountAndBalance"
           }
-        }
-      }
-    },
-    "v1HealthCheckResponse": {
-      "type": "object",
-      "properties": {
-        "status": {
-          "$ref": "#/definitions/HealthCheckResponseServingStatus"
         }
       }
     },

@@ -20,7 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
+	"math/big"
 
 	"github.com/coinbase-samples/ib-ledger-go/internal/dbmanager"
 	ledgererr "github.com/coinbase-samples/ib-ledger-go/internal/errors"
@@ -31,36 +31,75 @@ import (
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 
 	"github.com/jackc/pgx/v5/pgconn"
-	log "github.com/sirupsen/logrus"
 )
 
 var (
 	initializeAccountSql = `
-    SELECT id, portfolio_id, user_id, currency, created_at, balance, hold, available 
+    SELECT 
+        id, 
+        portfolio_id, 
+        user_id, 
+        currency, 
+        created_at, 
+        balance, 
+        hold,
+        available 
     FROM initialize_account($1, $2, $3);`
 
 	getAllAccountsAndMostRecentBalancesSql = `
-    SELECT account_id, currency, balance, hold, available, created_at 
+    SELECT 
+        account_id, 
+        currency, 
+        balance, 
+        hold, 
+        available, 
+        created_at 
     FROM get_balances_for_users($1);`
 
 	createTransactionSql = `
-    SELECT id, sender_id, receiver_id, request_id, transaction_type, created_at 
+    SELECT 
+        id, 
+        sender_id, 
+        receiver_id, 
+        request_id, 
+        transaction_type, 
+        created_at 
     FROM create_transaction_and_place_hold($1, $2, $3, $4, $5, $6, $7, $8);`
 
 	partialReleaseHoldSql = `
-    SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id 
+    SELECT 
+        hold_id, 
+        sender_entry_id, 
+        receiver_entry_id, 
+        sender_balance_id, 
+        receiver_balance_id 
     FROM partial_release_hold($1, $2, $3, $4, $5, $6, $7, $8);`
 
 	completeTransactionSql = `
-    SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id 
+    SELECT 
+        hold_id, 
+        sender_entry_id, 
+        receiver_entry_id, 
+        sender_balance_id, 
+        receiver_balance_id 
     FROM complete_transaction($1, $2);`
 
 	failTransactionSql = `
-    SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id 
+    SELECT 
+        hold_id, 
+        sender_entry_id, 
+        receiver_entry_id, 
+        sender_balance_id, 
+        receiver_balance_id 
     FROM fail_transaction($1, $2);`
 
 	cancelTransactionSql = `
-    SELECT hold_id, sender_entry_id, receiver_entry_id, sender_balance_id, receiver_balance_id 
+    SELECT 
+        hold_id, 
+        sender_entry_id, 
+        receiver_entry_id, 
+        sender_balance_id, 
+        receiver_balance_id 
     FROM cancel_transaction($1, $2);`
 )
 
@@ -77,31 +116,38 @@ func (r *PostgresRepository) handleErrors(err error) error {
 
 	if errors.As(err, &pgErr) {
 		msg := pgErr.Message
-		log.Errorf("postgres error - code: %v - message: %v", pgErr.SQLState(), msg)
 		switch msg {
-		case "insufficient available balance":
-			return ledgererr.New(codes.InvalidArgument, "insufficient balance for transaction")
-		case "sender account missing":
-		case "receiver account missing":
-			return ledgererr.New(codes.NotFound, "account not found")
-		case "transaction not found":
+		case "LGR401":
+			return ledgererr.New(codes.NotFound, "balance not found")
+		case "LGR402":
+			return ledgererr.New(codes.NotFound, "sender account not found")
+		case "LGR403":
+			return ledgererr.New(codes.NotFound, "receiver account not found")
+		case "LGR404":
 			return ledgererr.New(codes.NotFound, msg)
-		case "no unreleased hold found for transaction":
-			return ledgererr.New(codes.InvalidArgument, msg)
-		case "all releases have not been ledgered":
-			return ledgererr.New(codes.FailedPrecondition, msg)
+		case "LGR405":
+			return ledgererr.New(codes.InvalidArgument, "no unreleased hold found for transaction")
+		case "LGR501":
+			return ledgererr.New(codes.InvalidArgument, "insufficient balance for transaction")
+		case "LGR502":
+			return ledgererr.New(codes.FailedPrecondition, "all releases have not been ledgered")
 		default:
 			return ledgererr.New(codes.Internal, "postgres internal failure")
 		}
 	}
-	log.Error(err.Error())
-	return ledgererr.FromError(err)
+	return ledgererr.New(codes.Internal, err.Error())
 }
 
 func (pr *PostgresRepository) InitializeAccount(ctx context.Context, request *api.InitializeAccountRequest) (*model.InitializeAccountResult, error) {
 	var initializeAccountResult []*model.InitializeAccountResult
 
-	err := pr.DBManager.Query(context.Background(), &initializeAccountResult, initializeAccountSql, request.PortfolioId, request.UserId, request.Currency)
+	err := pr.DBManager.Query(
+		context.Background(),
+		&initializeAccountResult,
+		initializeAccountSql,
+		request.PortfolioId,
+		request.UserId,
+		request.Currency)
 	if err != nil {
 		return nil, pr.handleErrors(err)
 	}
@@ -117,10 +163,15 @@ func (pr *PostgresRepository) CreateTransaction(ctx context.Context, request *ap
 		return nil, fmt.Errorf("bad request: transaction type not supported: %v", transactionType)
 	}
 
-	totalAmountInt, _ := strconv.ParseInt(request.TotalAmount, 10, 64)
+	totalAmountInt := new(big.Int)
+	totalAmountInt.SetString(request.TotalAmount, 10)
+	totalAmountWithFees := new(big.Int)
 	if request.FeeAmount != nil {
-		feeAmountInt, _ := strconv.ParseInt(request.FeeAmount.Value, 10, 64)
-		totalAmountInt += feeAmountInt
+		feeAmountInt := new(big.Int)
+		feeAmountInt.SetString(request.FeeAmount.Value, 10)
+		totalAmountWithFees.Add(totalAmountInt, feeAmountInt)
+	} else {
+		totalAmountWithFees = totalAmountInt
 	}
 
 	err := pr.DBManager.Query(context.Background(),
@@ -132,7 +183,7 @@ func (pr *PostgresRepository) CreateTransaction(ctx context.Context, request *ap
 		request.Receiver.Currency,
 		request.Receiver.UserId,
 		request.RequestId.Value,
-		totalAmountInt,
+		totalAmountWithFees.String(),
 		transactionType)
 	if err != nil {
 		return nil, pr.handleErrors(err)
@@ -144,23 +195,26 @@ func (pr *PostgresRepository) CreateTransaction(ctx context.Context, request *ap
 func (pr *PostgresRepository) PartialReleaseHold(ctx context.Context, request *api.PartialReleaseHoldRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
 
-	var retailFeeAmount int64
+	var retailFeeAmount string
 	if request.RetailFeeAmount == nil {
-		retailFeeAmount = 0
+		retailFeeAmount = "0"
 	} else {
-		retailFeeAmount, _ = strconv.ParseInt(request.RetailFeeAmount.Value, 10, 64)
+		retailFeeAmount = request.RetailFeeAmount.Value
 	}
 
-	var venueFeeAmount int64
+	var venueFeeAmount string
 	if request.VenueFeeAmount == nil {
-		venueFeeAmount = 0
+		venueFeeAmount = "0"
 	} else {
-		venueFeeAmount, _ = strconv.ParseInt(request.VenueFeeAmount.Value, 10, 64)
+		venueFeeAmount = request.VenueFeeAmount.Value
 	}
 
-	retailAccountId, venueAccountId := utils.GetFeeAccounts("USD")
+	retailAccountId, venueAccountId, err := utils.GetFeeAccounts("USD")
+	if err != nil {
+		return nil, err
+	}
 
-	err := pr.DBManager.Query(
+	err = pr.DBManager.Query(
 		context.Background(),
 		&TransactionResult,
 		partialReleaseHoldSql,
@@ -198,7 +252,12 @@ func (pr *PostgresRepository) CompleteTransaction(ctx context.Context, request *
 func (pr *PostgresRepository) FailTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
 
-	err := pr.DBManager.Query(context.Background(), &TransactionResult, failTransactionSql, request.OrderId, request.RequestId)
+	err := pr.DBManager.Query(
+		context.Background(),
+		&TransactionResult,
+		failTransactionSql,
+		request.OrderId,
+		request.RequestId)
 	if err != nil {
 		return nil, pr.handleErrors(err)
 	}
@@ -209,7 +268,12 @@ func (pr *PostgresRepository) FailTransaction(ctx context.Context, request *api.
 func (pr *PostgresRepository) CancelTransaction(ctx context.Context, request *api.FinalizeTransactionRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
 
-	err := pr.DBManager.Query(context.Background(), &TransactionResult, cancelTransactionSql, request.OrderId, request.RequestId)
+	err := pr.DBManager.Query(
+		context.Background(),
+		&TransactionResult,
+		cancelTransactionSql,
+		request.OrderId,
+		request.RequestId)
 	if err != nil {
 		return nil, pr.handleErrors(err)
 	}
@@ -220,7 +284,11 @@ func (pr *PostgresRepository) CancelTransaction(ctx context.Context, request *ap
 func (pr *PostgresRepository) GetAllAccountsAndMostRecentBalances(ctx context.Context, userId string) ([]*model.GetAccountResult, error) {
 	var accountResult []*model.GetAccountResult
 
-	err := pr.DBManager.Query(context.Background(), &accountResult, getAllAccountsAndMostRecentBalancesSql, userId)
+	err := pr.DBManager.Query(
+		context.Background(),
+		&accountResult,
+		getAllAccountsAndMostRecentBalancesSql,
+		userId)
 	if err != nil {
 		return nil, pr.handleErrors(err)
 	}

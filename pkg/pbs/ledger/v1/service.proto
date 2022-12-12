@@ -20,12 +20,12 @@ package pkg.pbs.ledger.v1;
 
 import "google/protobuf/wrappers.proto";
 import "pkg/pbs/ledger/v1/model.proto";
+import "validate/validate.proto";
 
 option go_package = "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1";
 
 // Ledger API
 service Ledger {
-  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse) {}
   rpc InitializeAccount(InitializeAccountRequest) returns (InitializeAccountResponse) {}
   rpc GetAccounts(GetAccountsRequest) returns (GetAccountsResponse) {}
   rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionResponse) {}
@@ -33,30 +33,19 @@ service Ledger {
   rpc FinalizeTransaction(FinalizeTransactionRequest) returns (FinalizeTransactionResponse) {}
 }
 
-message HealthCheckRequest {}
-
-message HealthCheckResponse {
-  enum ServingStatus {
-    UNKNOWN = 0;
-    SERVING = 1;
-    NOT_SERVING = 2;
-  }
-  ServingStatus status = 1;
-}
-
 message InitializeAccountRequest {
-  string portfolioId = 1;
-  string userId = 2;
-  string currency = 3;
+  string portfolioId = 1[(validate.rules).string.len = 36];
+  string userId = 2[(validate.rules).string.len = 36];
+  string currency = 3[(validate.rules).string.min_len = 3];
 }
 
 message InitializeAccountResponse {
-  Account account = 1;
-  AccountBalance accountBalance = 2;
+  Account account = 1[(validate.rules).message.required = true];
+  AccountBalance accountBalance = 2[(validate.rules).message.required = true];
 }
 
 message GetAccountsRequest {
-  string userId = 1;
+  string userId = 1[(validate.rules).string.len = 36];
 }
 
 message GetAccountsResponse {
@@ -64,9 +53,9 @@ message GetAccountsResponse {
 }
 
 message CreateTransactionRequest {
-  string orderId = 1;
-  Account sender = 2;
-  Account receiver = 3;
+  string orderId = 1[(validate.rules).string.len = 36];
+  Account sender = 2[(validate.rules).message.required = true];
+  Account receiver = 3[(validate.rules).message.required = true];
   string totalAmount = 4;
   google.protobuf.StringValue feeAmount = 5;
   TransactionType transactionType = 6;
@@ -78,8 +67,8 @@ message CreateTransactionResponse {
 }
 
 message PartialReleaseHoldRequest {
-  string orderId = 1;
-  string requestId = 2;
+  string orderId = 1[(validate.rules).string.len = 36];
+  string requestId = 2[(validate.rules).string.len = 36];
   string senderAmount = 3;
   string receiverAmount = 4;
   google.protobuf.StringValue venueFeeAmount = 6;
@@ -92,8 +81,8 @@ message PartialReleaseHoldResponse {
 }
 
 message FinalizeTransactionRequest {
-  string orderId = 1;
-  string requestId = 2;
+  string orderId = 1[(validate.rules).string.len = 36];
+  string requestId = 2[(validate.rules).string.len = 36];
   TransactionStatus finalizedStatus = 3;
   google.protobuf.StringValue senderAmount = 4;
   google.protobuf.StringValue receiverAmount = 5;

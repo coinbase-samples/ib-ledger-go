@@ -17,7 +17,7 @@
 CREATE TYPE get_account_result AS
 (
     account_id UUID,
-    currency   TEXT,
+    currency   VARCHAR(64),
     balance    NUMERIC,
     hold       NUMERIC,
     available  NUMERIC,
@@ -31,7 +31,7 @@ CREATE OR REPLACE FUNCTION get_balances_for_users(
 AS
 $$
 BEGIN
-    return QUERY
+    RETURN QUERY
         SELECT acc.id, acc.currency, ab.balance, ab.hold, ab.available, ab.created_at
         FROM (select id, currency FROM account WHERE user_id = arg_user_id) acc
                  INNER JOIN

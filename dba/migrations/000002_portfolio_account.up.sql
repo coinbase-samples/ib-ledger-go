@@ -30,9 +30,9 @@ BEGIN
     LIMIT 1
     INTO result_balance;
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'no balance found';
+        RAISE EXCEPTION 'LGR401';
     END IF;
-    return result_balance;
+    RETURN result_balance;
 END
 $$;
 
@@ -41,7 +41,7 @@ CREATE TYPE account_result AS
     id           UUID,
     portfolio_id UUID,
     user_id      UUID,
-    currency     TEXT,
+    currency     VARCHAR(64),
     created_at   TIMESTAMPTZ,
     balance      NUMERIC,
     hold         NUMERIC,
@@ -51,7 +51,7 @@ CREATE TYPE account_result AS
 CREATE OR REPLACE FUNCTION initialize_account(
     arg_portfolio_id UUID,
     arg_user_id UUID,
-    arg_currency TEXT
+    arg_currency VARCHAR(64)
 ) RETURNS account_result
     LANGUAGE plpgsql
 AS
@@ -73,7 +73,7 @@ BEGIN
         result_account.hold = temp_balance.hold;
         result_account.available = temp_balance.available;
         return result_account;
-    end if;
+    END IF;
     INSERT INTO account (portfolio_id, user_id, currency)
     VALUES (arg_portfolio_id, arg_user_id, arg_currency)
     RETURNING id, portfolio_id, user_id, currency, created_at INTO result_account;
@@ -86,6 +86,6 @@ BEGIN
     result_account.hold = temp_balance.hold;
     result_account.available = temp_balance.available;
 
-    return result_account;
+    RETURN result_account;
 END
 $$;

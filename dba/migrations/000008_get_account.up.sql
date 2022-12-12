@@ -16,13 +16,13 @@
 
 CREATE OR REPLACE FUNCTION get_account_and_latest_balance(
     arg_user_id UUID,
-    arg_currency TEXT
+    arg_currency VARCHAR(64)
 ) RETURNS SETOF get_account_result
     LANGUAGE plpgsql
 AS
 $$
 BEGIN
-    return QUERY
+    RETURN QUERY
         SELECT acc.id, acc.currency, ab.balance, ab.hold, ab.available, ab.created_at
         FROM (select id, currency FROM account WHERE user_id = arg_user_id AND currency = arg_currency) acc
                  INNER JOIN

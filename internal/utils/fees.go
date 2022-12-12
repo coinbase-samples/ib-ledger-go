@@ -16,15 +16,22 @@
 
 package utils
 
+import (
+	"fmt"
+
+	ledgererr "github.com/coinbase-samples/ib-ledger-go/internal/errors"
+	"google.golang.org/grpc/codes"
+)
+
 const NeoworksUsdAccount = "B72D0E55-F53A-4DB0-897E-2CE4A73CB94B"
 
 const CoinbaseUsdAccount = "C4D0E14E-1B2B-4023-AFA6-8891AD1960C9"
 
-func GetFeeAccounts(currency string) (string, string) {
+func GetFeeAccounts(currency string) (string, string, error) {
 	switch currency {
 	case "USD":
-		return NeoworksUsdAccount, CoinbaseUsdAccount
+		return NeoworksUsdAccount, CoinbaseUsdAccount, nil
 	default:
-		return "", ""
+		return "", "", ledgererr.New(codes.InvalidArgument, fmt.Sprintf("invalid currency for fee accounts: %v", currency))
 	}
 }

@@ -36,7 +36,6 @@ func TestBadFinalizeTransactionType(t *testing.T) {
 	}
 
 	_, err := service.FinalizeTransaction(context.TODO(), request)
-
 	if err == nil {
 		t.Fatal("expected error returned from function invocation")
 	}
@@ -55,7 +54,6 @@ func TestTransactionNotFoundCompleteTransaction(t *testing.T) {
 	}
 
 	_, err := service.FinalizeTransaction(context.TODO(), request)
-
 	if err == nil {
 		t.Fatal("expected transaction not found error returned from complete transaction invocation")
 	}
@@ -75,7 +73,6 @@ func TestSuccessfulCompleteTransaction(t *testing.T) {
 	}
 
 	_, err := service.FinalizeTransaction(context.TODO(), request)
-
 	if err != nil {
 		t.Fatalf("expected successful execution of complete transaction, received err: %v", err.Error())
 	}
@@ -90,7 +87,6 @@ func TestTransactionNotFoundFailTransaction(t *testing.T) {
 	}
 
 	_, err := service.FinalizeTransaction(context.TODO(), request)
-
 	if err == nil {
 		t.Fatal("expected transaction not found error returned from fail transaction invocation")
 	}
@@ -125,7 +121,6 @@ func TestTransactionNotFoundCancelTransaction(t *testing.T) {
 	}
 
 	_, err := service.FinalizeTransaction(context.TODO(), request)
-
 	if err == nil {
 		t.Fatal("expected transaction not found error returned from cancel transaction invocation")
 	}
@@ -145,7 +140,6 @@ func TestSuccessfulCancelTransaction(t *testing.T) {
 	}
 
 	_, err := service.FinalizeTransaction(context.TODO(), request)
-
 	if err != nil {
 		t.Fatalf("expected successful execution of cancel transaction, received err: %v", err.Error())
 	}

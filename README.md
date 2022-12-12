@@ -1,4 +1,4 @@
-# Amplify Ledger
+# IB-Ledger-Go
 
 Package providing a double-entry accounting ledger for a Coinbase Prime Introducing Brokers integration. It is built using Golang 1.19, 
 and runs as a GRPC application server with a PostgreSQL Database.
@@ -22,10 +22,10 @@ make start-local
 ```
 
 This does the following:
-* runs docker-compose up
-* runs migrate up
-* executes the test/sql directory file to insert testing data
-* starts the application server - default port is 8445
+* Runs docker-compose up
+* Runs migrate up
+* Executes the test/sql directory file to insert testing data
+* Starts the application server - default port is 8445
 
 ### Integration Test
 Integration tests are stored under test/integration. These are currently configured to only run locally. Cleanup is still being implemented, so the 
@@ -37,5 +37,5 @@ make integ-test
 ```
 
 ## License
-This library is licensed under the Apache 2.0 License. See the LICENSE file.
+This library is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE) file.
 

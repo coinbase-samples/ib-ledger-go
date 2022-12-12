@@ -22,7 +22,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LedgerClient interface {
-	HealthCheck(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error)
 	InitializeAccount(ctx context.Context, in *InitializeAccountRequest, opts ...grpc.CallOption) (*InitializeAccountResponse, error)
 	GetAccounts(ctx context.Context, in *GetAccountsRequest, opts ...grpc.CallOption) (*GetAccountsResponse, error)
 	CreateTransaction(ctx context.Context, in *CreateTransactionRequest, opts ...grpc.CallOption) (*CreateTransactionResponse, error)
@@ -36,15 +35,6 @@ type ledgerClient struct {
 
 func NewLedgerClient(cc grpc.ClientConnInterface) LedgerClient {
 	return &ledgerClient{cc}
-}
-
-func (c *ledgerClient) HealthCheck(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error) {
-	out := new(HealthCheckResponse)
-	err := c.cc.Invoke(ctx, "/pkg.pbs.ledger.v1.Ledger/HealthCheck", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *ledgerClient) InitializeAccount(ctx context.Context, in *InitializeAccountRequest, opts ...grpc.CallOption) (*InitializeAccountResponse, error) {
@@ -96,7 +86,6 @@ func (c *ledgerClient) FinalizeTransaction(ctx context.Context, in *FinalizeTran
 // All implementations must embed UnimplementedLedgerServer
 // for forward compatibility
 type LedgerServer interface {
-	HealthCheck(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error)
 	InitializeAccount(context.Context, *InitializeAccountRequest) (*InitializeAccountResponse, error)
 	GetAccounts(context.Context, *GetAccountsRequest) (*GetAccountsResponse, error)
 	CreateTransaction(context.Context, *CreateTransactionRequest) (*CreateTransactionResponse, error)
@@ -109,9 +98,6 @@ type LedgerServer interface {
 type UnimplementedLedgerServer struct {
 }
 
-func (UnimplementedLedgerServer) HealthCheck(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method HealthCheck not implemented")
-}
 func (UnimplementedLedgerServer) InitializeAccount(context.Context, *InitializeAccountRequest) (*InitializeAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InitializeAccount not implemented")
 }
@@ -138,24 +124,6 @@ type UnsafeLedgerServer interface {
 
 func RegisterLedgerServer(s grpc.ServiceRegistrar, srv LedgerServer) {
 	s.RegisterService(&Ledger_ServiceDesc, srv)
-}
-
-func _Ledger_HealthCheck_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HealthCheckRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(LedgerServer).HealthCheck(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pkg.pbs.ledger.v1.Ledger/HealthCheck",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LedgerServer).HealthCheck(ctx, req.(*HealthCheckRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Ledger_InitializeAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -255,10 +223,6 @@ var Ledger_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "pkg.pbs.ledger.v1.Ledger",
 	HandlerType: (*LedgerServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "HealthCheck",
-			Handler:    _Ledger_HealthCheck_Handler,
-		},
 		{
 			MethodName: "InitializeAccount",
 			Handler:    _Ledger_InitializeAccount_Handler,
