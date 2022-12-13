@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/coinbase-samples/ib-ledger-go/config"
 	"github.com/coinbase-samples/ib-ledger-go/internal/dbmanager"
 	ledgererr "github.com/coinbase-samples/ib-ledger-go/internal/errors"
 	"github.com/coinbase-samples/ib-ledger-go/internal/model"
@@ -105,10 +106,11 @@ var (
 
 type PostgresRepository struct {
 	DBManager dbmanager.DBManager
+    App config.AppConfig
 }
 
-func NewPostgresHandler(dbmanager dbmanager.DBManager) *PostgresRepository {
-	return &PostgresRepository{DBManager: dbmanager}
+func NewPostgresHandler(dbmanager dbmanager.DBManager, app config.AppConfig) *PostgresRepository {
+    return &PostgresRepository{DBManager: dbmanager, App: app}
 }
 
 func (r *PostgresRepository) handleErrors(err error) error {
@@ -209,12 +211,7 @@ func (pr *PostgresRepository) PartialReleaseHold(ctx context.Context, request *a
 		venueFeeAmount = request.VenueFeeAmount.Value
 	}
 
-	retailAccountId, venueAccountId, err := utils.GetFeeAccounts("USD")
-	if err != nil {
-		return nil, err
-	}
-
-	err = pr.DBManager.Query(
+    err := pr.DBManager.Query(
 		context.Background(),
 		&TransactionResult,
 		partialReleaseHoldSql,
@@ -223,9 +220,9 @@ func (pr *PostgresRepository) PartialReleaseHold(ctx context.Context, request *a
 		request.SenderAmount,
 		request.ReceiverAmount,
 		retailFeeAmount,
-		retailAccountId,
+        pr.App.NeoworksUsdAccount,
 		venueFeeAmount,
-		venueAccountId)
+		pr.App.CoinbaseUsdAccount)
 	if err != nil {
 		return nil, pr.handleErrors(err)
 	}

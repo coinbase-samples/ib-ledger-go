@@ -53,7 +53,7 @@ func gRPCListen(app config.AppConfig, l *log.Entry) {
 
 	// Setup application service
 	dbm := dbmanager.NewPostgresDBManager(&app, l)
-	rep := repository.NewPostgresHandler(dbm)
+	rep := repository.NewPostgresHandler(dbm, app)
 	service := service.NewService(rep)
 
 	api.RegisterLedgerServer(s, service)

@@ -51,7 +51,7 @@ func NewPostgresDBManager(app *config.AppConfig, l *log.Entry) *PostgresDBManage
 
 	pool, err := pgxpool.New(context.Background(), dbUrl)
 	if err != nil {
-		l.Fatalf("failed to establish DB Pool: %w", err)
+		l.Fatalf("failed to establish DB Pool: %v", err.Error())
 	}
 
 	return &PostgresDBManager{Pool: pool}

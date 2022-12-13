@@ -68,7 +68,7 @@ message CreateTransactionResponse {
 
 message PartialReleaseHoldRequest {
   string orderId = 1[(validate.rules).string.len = 36];
-  string requestId = 2[(validate.rules).string.len = 36];
+  string requestId = 2;
   string senderAmount = 3;
   string receiverAmount = 4;
   google.protobuf.StringValue venueFeeAmount = 6;
@@ -82,7 +82,7 @@ message PartialReleaseHoldResponse {
 
 message FinalizeTransactionRequest {
   string orderId = 1[(validate.rules).string.len = 36];
-  string requestId = 2[(validate.rules).string.len = 36];
+  string requestId = 2;
   TransactionStatus finalizedStatus = 3;
   google.protobuf.StringValue senderAmount = 4;
   google.protobuf.StringValue receiverAmount = 5;

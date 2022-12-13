@@ -1025,17 +1025,7 @@ func (m *PartialReleaseHoldRequest) validate(all bool) error {
 
 	}
 
-	if utf8.RuneCountInString(m.GetRequestId()) != 36 {
-		err := PartialReleaseHoldRequestValidationError{
-			field:  "RequestId",
-			reason: "value length must be 36 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-
-	}
+	// no validation rules for RequestId
 
 	// no validation rules for SenderAmount
 
@@ -1346,17 +1336,7 @@ func (m *FinalizeTransactionRequest) validate(all bool) error {
 
 	}
 
-	if utf8.RuneCountInString(m.GetRequestId()) != 36 {
-		err := FinalizeTransactionRequestValidationError{
-			field:  "RequestId",
-			reason: "value length must be 36 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-
-	}
+	// no validation rules for RequestId
 
 	// no validation rules for FinalizedStatus
 
