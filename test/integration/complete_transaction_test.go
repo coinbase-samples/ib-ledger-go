@@ -42,7 +42,7 @@ func TestSuccessfulCompleteTransaction(t *testing.T) {
 			Currency: "ETH",
 		},
 		TotalAmount:     "1000",
-		TransactionType: ledger.TransactionType_TRANSFER,
+		TransactionType: ledger.TransactionType_TRANSACTION_TYPE_TRANSFER,
 		RequestId:       &wrapperspb.StringValue{Value: "85688730-9A34-4F9C-8475-7521B957F164"},
 	}
 
@@ -110,7 +110,7 @@ func TestSuccessfulCompleteTransaction(t *testing.T) {
 	finalizeResponse, err := ledgerClient.FinalizeTransaction(ctx, &ledger.FinalizeTransactionRequest{
 		OrderId:         orderId,
 		RequestId:       "E2586CC8-2879-48B2-83E2-F1F5CF87E248",
-		FinalizedStatus: ledger.TransactionStatus_COMPLETE,
+		FinalizedStatus: ledger.TransactionStatus_TRANSACTION_STATUS_COMPLETE,
 	})
 
 	if err != nil {

@@ -32,7 +32,7 @@ import (
 func (s *Service) CreateTransaction(ctx context.Context, req *api.CreateTransactionRequest) (*api.CreateTransactionResponse, error) {
 	l := ctxlogrus.Extract(ctx)
 
-	if err := req.Validate(); err != nil {
+	if err := req.ValidateAll(); err != nil {
 		l.Debugf("invalid create transaction request: %v", req)
 		return nil, fmt.Errorf("ib-ledger-go: %w", err)
 	}
@@ -53,7 +53,7 @@ func (s *Service) CreateTransaction(ctx context.Context, req *api.CreateTransact
 			CreatedAt:         timestamppb.New(result.CreatedAt),
 			TransactionType:   transactionType,
 			RequestId:         result.RequestId.String(),
-			TransactionStatus: api.TransactionStatus_PENDING,
+			TransactionStatus: api.TransactionStatus_TRANSACTION_STATUS_PENDING,
 		},
 	}, nil
 }
@@ -61,7 +61,7 @@ func (s *Service) CreateTransaction(ctx context.Context, req *api.CreateTransact
 func (s *Service) PartialReleaseHold(ctx context.Context, req *api.PartialReleaseHoldRequest) (*api.PartialReleaseHoldResponse, error) {
 	l := ctxlogrus.Extract(ctx)
 
-	if err := req.Validate(); err != nil {
+	if err := req.ValidateAll(); err != nil {
 		l.Debugf("invalid partial release hold request: %v", req)
 		return nil, fmt.Errorf("ib-ledger-go: %w", err)
 	}
@@ -78,23 +78,23 @@ func (s *Service) PartialReleaseHold(ctx context.Context, req *api.PartialReleas
 func (s *Service) FinalizeTransaction(ctx context.Context, req *api.FinalizeTransactionRequest) (*api.FinalizeTransactionResponse, error) {
 	l := ctxlogrus.Extract(ctx)
 
-	if err := req.Validate(); err != nil {
+	if err := req.ValidateAll(); err != nil {
 		l.Debugf("invalid finalize transaction request: %v", req)
 		return nil, fmt.Errorf("ib-ledger-go: %w", err)
 	}
 
 	switch req.FinalizedStatus {
-	case api.TransactionStatus_COMPLETE:
+	case api.TransactionStatus_TRANSACTION_STATUS_COMPLETE:
 		_, err := s.Repository.CompleteTransaction(ctx, req)
 		if err != nil {
 			return nil, fmt.Errorf("ib-ledger-go: %w", err)
 		}
-	case api.TransactionStatus_FAILED:
+	case api.TransactionStatus_TRANSACTION_STATUS_FAILED:
 		_, err := s.Repository.FailTransaction(ctx, req)
 		if err != nil {
 			return nil, fmt.Errorf("ib-ledger-go: %w", err)
 		}
-	case api.TransactionStatus_CANCELED:
+	case api.TransactionStatus_TRANSACTION_STATUS_CANCELED:
 		_, err := s.Repository.CancelTransaction(ctx, req)
 		if err != nil {
 			return nil, fmt.Errorf("ib-ledger-go: %w", err)

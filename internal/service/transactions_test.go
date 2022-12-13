@@ -32,14 +32,15 @@ func TestBadFinalizeTransactionType(t *testing.T) {
 	request := &api.FinalizeTransactionRequest{
 		OrderId:         orderId,
 		SenderAmount:    &wrapperspb.StringValue{Value: "1"},
-		FinalizedStatus: api.TransactionStatus_PENDING,
+		FinalizedStatus: api.TransactionStatus_TRANSACTION_STATUS_PENDING,
 	}
 
-	_, err := service.FinalizeTransaction(context.TODO(), request); if err == nil {
+	_, err := service.FinalizeTransaction(context.TODO(), request)
+	if err == nil {
 		t.Fatal("expected error returned from function invocation")
 	}
 
-    if err.Error() != fmt.Sprintf("ib-ledger-go: finalize transaction: unable to finalize pending transaction - transaction: %v", orderId) {
+	if err.Error() != fmt.Sprintf("ib-ledger-go: finalize transaction: unable to finalize pending transaction - transaction: %v", orderId) {
 		t.Fatalf("unexpected error message, received: %v", err.Error())
 	}
 }
@@ -49,14 +50,15 @@ func TestTransactionNotFoundCompleteTransaction(t *testing.T) {
 	request := &api.FinalizeTransactionRequest{
 		OrderId:         repository.CompleteTransactionUuidNotFound,
 		SenderAmount:    &wrapperspb.StringValue{Value: "1"},
-		FinalizedStatus: api.TransactionStatus_COMPLETE,
+		FinalizedStatus: api.TransactionStatus_TRANSACTION_STATUS_COMPLETE,
 	}
 
-	_, err := service.FinalizeTransaction(context.TODO(), request); if err == nil {
+	_, err := service.FinalizeTransaction(context.TODO(), request)
+	if err == nil {
 		t.Fatal("expected transaction not found error returned from complete transaction invocation")
 	}
 
-    if err.Error() != "ib-ledger-go: LGR404" {
+	if err.Error() != "ib-ledger-go: LGR404" {
 		t.Fatalf("unexpected error message from complete transaction, received: %v", err.Error())
 	}
 }
@@ -67,10 +69,11 @@ func TestSuccessfulCompleteTransaction(t *testing.T) {
 	request := &api.FinalizeTransactionRequest{
 		OrderId:         orderId,
 		SenderAmount:    &wrapperspb.StringValue{Value: "1"},
-		FinalizedStatus: api.TransactionStatus_COMPLETE,
+		FinalizedStatus: api.TransactionStatus_TRANSACTION_STATUS_COMPLETE,
 	}
 
-	_, err := service.FinalizeTransaction(context.TODO(), request); if err != nil {
+	_, err := service.FinalizeTransaction(context.TODO(), request)
+	if err != nil {
 		t.Fatalf("expected successful execution of complete transaction, received err: %v", err.Error())
 	}
 }
@@ -80,14 +83,15 @@ func TestTransactionNotFoundFailTransaction(t *testing.T) {
 	request := &api.FinalizeTransactionRequest{
 		OrderId:         repository.FailTransactionUuidNotFound,
 		SenderAmount:    &wrapperspb.StringValue{Value: "1"},
-		FinalizedStatus: api.TransactionStatus_FAILED,
+		FinalizedStatus: api.TransactionStatus_TRANSACTION_STATUS_FAILED,
 	}
 
-	_, err := service.FinalizeTransaction(context.TODO(), request); if err == nil {
+	_, err := service.FinalizeTransaction(context.TODO(), request)
+	if err == nil {
 		t.Fatal("expected transaction not found error returned from fail transaction invocation")
 	}
 
-    if err.Error() != "ib-ledger-go: LGR404" {
+	if err.Error() != "ib-ledger-go: LGR404" {
 		t.Fatalf("unexpected error message from fail transaction, received: %v", err.Error())
 	}
 }
@@ -98,10 +102,11 @@ func TestSuccessfulFailTransaction(t *testing.T) {
 	request := &api.FinalizeTransactionRequest{
 		OrderId:         orderId,
 		SenderAmount:    &wrapperspb.StringValue{Value: "1"},
-		FinalizedStatus: api.TransactionStatus_FAILED,
+		FinalizedStatus: api.TransactionStatus_TRANSACTION_STATUS_FAILED,
 	}
 
-	_, err := service.FinalizeTransaction(context.TODO(), request); if err != nil {
+	_, err := service.FinalizeTransaction(context.TODO(), request)
+	if err != nil {
 		t.Fatalf("expected successful execution of fail transaction, received err: %v", err.Error())
 	}
 }
@@ -111,14 +116,15 @@ func TestTransactionNotFoundCancelTransaction(t *testing.T) {
 	request := &api.FinalizeTransactionRequest{
 		OrderId:         repository.CancelTransactionUuidNotFound,
 		SenderAmount:    &wrapperspb.StringValue{Value: "1"},
-		FinalizedStatus: api.TransactionStatus_CANCELED,
+		FinalizedStatus: api.TransactionStatus_TRANSACTION_STATUS_CANCELED,
 	}
 
-	_, err := service.FinalizeTransaction(context.TODO(), request); if err == nil {
+	_, err := service.FinalizeTransaction(context.TODO(), request)
+	if err == nil {
 		t.Fatal("expected transaction not found error returned from cancel transaction invocation")
 	}
 
-    if err.Error() != "ib-ledger-go: LGR404" {
+	if err.Error() != "ib-ledger-go: LGR404" {
 		t.Fatalf("unexpected error message from cancel transaction, received: %v", err.Error())
 	}
 }
@@ -129,10 +135,11 @@ func TestSuccessfulCancelTransaction(t *testing.T) {
 	request := &api.FinalizeTransactionRequest{
 		OrderId:         orderId,
 		SenderAmount:    &wrapperspb.StringValue{Value: "1"},
-		FinalizedStatus: api.TransactionStatus_CANCELED,
+		FinalizedStatus: api.TransactionStatus_TRANSACTION_STATUS_CANCELED,
 	}
 
-	_, err := service.FinalizeTransaction(context.TODO(), request); if err != nil {
+	_, err := service.FinalizeTransaction(context.TODO(), request)
+	if err != nil {
 		t.Fatalf("expected successful execution of cancel transaction, received err: %v", err.Error())
 	}
 }

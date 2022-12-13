@@ -23,23 +23,23 @@ import (
 func GetTransactionTypeFromString(s string) (api.TransactionType, bool) {
 	switch s {
 	case "TRANSFER":
-		return api.TransactionType_TRANSFER, true
+		return api.TransactionType_TRANSACTION_TYPE_TRANSFER, true
 	case "ORDER":
-		return api.TransactionType_ORDER, true
+		return api.TransactionType_TRANSACTION_TYPE_ORDER, true
 	case "CONVERT":
-		return api.TransactionType_CONVERT, true
+		return api.TransactionType_TRANSACTION_TYPE_CONVERT, true
 	default:
-		return api.TransactionType_TRANSFER, false
+		return api.TransactionType_TRANSACTION_TYPE_UNSPECIFIED, false
 	}
 }
 
 func GetStringFromTransactionType(t api.TransactionType) (string, bool) {
 	switch t {
-	case api.TransactionType_TRANSFER:
+	case api.TransactionType_TRANSACTION_TYPE_TRANSFER:
 		return "TRANSFER", true
-	case api.TransactionType_ORDER:
+	case api.TransactionType_TRANSACTION_TYPE_ORDER:
 		return "ORDER", true
-	case api.TransactionType_CONVERT:
+	case api.TransactionType_TRANSACTION_TYPE_CONVERT:
 		return "CONVERT", true
 	default:
 		return "", false

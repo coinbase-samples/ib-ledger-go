@@ -42,7 +42,7 @@ func TestSuccessfulCancelTransaction(t *testing.T) {
 			Currency: "ETH",
 		},
 		TotalAmount:     "1000",
-		TransactionType: ledger.TransactionType_TRANSFER,
+		TransactionType: ledger.TransactionType_TRANSACTION_TYPE_TRANSFER,
 		RequestId:       &wrapperspb.StringValue{Value: "E9115CD9-8E15-44B9-A3C1-4F5EC87FE12F"},
 	}
 	createTransactionAndConfirmHolds(ledgerClient, ctx, t, createTransactionRequest)
@@ -65,7 +65,7 @@ func TestSuccessfulCancelTransaction(t *testing.T) {
 	finalizeResult, err := ledgerClient.FinalizeTransaction(ctx, &ledger.FinalizeTransactionRequest{
 		OrderId:         orderId,
 		RequestId:       "A23CE1FB-4221-4CB0-8E8F-8D5B7C3C4FA3",
-		FinalizedStatus: ledger.TransactionStatus_CANCELED,
+		FinalizedStatus: ledger.TransactionStatus_TRANSACTION_STATUS_CANCELED,
 	})
 
 	if err != nil {

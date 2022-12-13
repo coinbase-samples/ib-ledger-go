@@ -106,11 +106,11 @@ var (
 
 type PostgresRepository struct {
 	DBManager dbmanager.DBManager
-    App config.AppConfig
+	App       config.AppConfig
 }
 
 func NewPostgresHandler(dbmanager dbmanager.DBManager, app config.AppConfig) *PostgresRepository {
-    return &PostgresRepository{DBManager: dbmanager, App: app}
+	return &PostgresRepository{DBManager: dbmanager, App: app}
 }
 
 func (r *PostgresRepository) handleErrors(err error) error {
@@ -211,7 +211,7 @@ func (pr *PostgresRepository) PartialReleaseHold(ctx context.Context, request *a
 		venueFeeAmount = request.VenueFeeAmount.Value
 	}
 
-    err := pr.DBManager.Query(
+	err := pr.DBManager.Query(
 		context.Background(),
 		&TransactionResult,
 		partialReleaseHoldSql,
@@ -220,7 +220,7 @@ func (pr *PostgresRepository) PartialReleaseHold(ctx context.Context, request *a
 		request.SenderAmount,
 		request.ReceiverAmount,
 		retailFeeAmount,
-        pr.App.NeoworksUsdAccount,
+		pr.App.NeoworksUsdAccount,
 		venueFeeAmount,
 		pr.App.CoinbaseUsdAccount)
 	if err != nil {

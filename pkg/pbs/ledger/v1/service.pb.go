@@ -334,7 +334,7 @@ func (x *CreateTransactionRequest) GetTransactionType() TransactionType {
 	if x != nil {
 		return x.TransactionType
 	}
-	return TransactionType_TRANSFER
+	return TransactionType_TRANSACTION_TYPE_UNSPECIFIED
 }
 
 func (x *CreateTransactionRequest) GetRequestId() *wrapperspb.StringValue {
@@ -597,7 +597,7 @@ func (x *FinalizeTransactionRequest) GetFinalizedStatus() TransactionStatus {
 	if x != nil {
 		return x.FinalizedStatus
 	}
-	return TransactionStatus_COMPLETE
+	return TransactionStatus_TRANSACTION_STATUS_UNSPECIFIED
 }
 
 func (x *FinalizeTransactionRequest) GetSenderAmount() *wrapperspb.StringValue {

@@ -30,7 +30,7 @@ import (
 func (s *Service) InitializeAccount(ctx context.Context, req *api.InitializeAccountRequest) (*api.InitializeAccountResponse, error) {
 	l := ctxlogrus.Extract(ctx)
 
-	if err := req.Validate(); err != nil {
+	if err := req.ValidateAll(); err != nil {
 		l.Debugf("invalid initialize account request: %v", req)
 		return nil, fmt.Errorf("ib-ledger-go: %w", err)
 	}
@@ -60,7 +60,7 @@ func (s *Service) InitializeAccount(ctx context.Context, req *api.InitializeAcco
 func (s *Service) GetAccounts(ctx context.Context, req *api.GetAccountsRequest) (*api.GetAccountsResponse, error) {
 	l := ctxlogrus.Extract(ctx)
 
-	if err := req.Validate(); err != nil {
+	if err := req.ValidateAll(); err != nil {
 		l.Debugf("invalid get accounts request: %v", req)
 		return nil, fmt.Errorf("ib-ledger-go: %w", err)
 	}
