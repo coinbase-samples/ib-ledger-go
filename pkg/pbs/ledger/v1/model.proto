@@ -1,0 +1,99 @@
+/**
+ * Copyright 2022 Coinbase Global, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+package pkg.pbs.ledger.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+option go_package = "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1";
+
+message Account {
+  google.protobuf.StringValue id = 1;
+  google.protobuf.StringValue portfolioId = 2;
+  string userId = 3;
+  string currency = 4;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message AccountBalance {
+  google.protobuf.StringValue id = 1;
+  string balance = 2;
+  string hold = 3;
+  string available = 4;
+  google.protobuf.StringValue account_id = 5;
+}
+
+message AccountAndBalance {
+  string accountId = 1;
+  string currency = 2;
+  string balance = 3;
+  string hold = 4;
+  string available = 5;
+  google.protobuf.Timestamp balanceAt = 6;
+}
+
+enum TransactionType {
+  TRANSACTION_TYPE_UNSPECIFIED = 0;
+  TRANSACTION_TYPE_TRANSFER = 1;
+  TRANSACTION_TYPE_ORDER = 2;
+  TRANSACTION_TYPE_CONVERT = 3;
+}
+
+enum TransactionStatus {
+  TRANSACTION_STATUS_UNSPECIFIED = 0;
+  TRANSACTION_STATUS_COMPLETE = 1;
+  TRANSACTION_STATUS_FAILED = 2;
+  TRANSACTION_STATUS_CANCELED = 3;
+  TRANSACTION_STATUS_PENDING = 4;
+}
+
+message Transaction {
+  string id = 1;
+  string senderId = 2;
+  string receiverId = 3;
+  string requestId = 4;
+  google.protobuf.Timestamp created_at = 5;
+  TransactionType transactionType = 6;
+  TransactionStatus transactionStatus = 7;
+  optional google.protobuf.Timestamp finalized_at = 8;
+}
+
+message Hold {
+  string id = 1;
+  string account_id = 2;
+  string transaction_id = 3;
+  string amount = 4;
+  string direction = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp released_at = 7;
+}
+
+message Entry {
+  // UUID
+  string id = 1;
+  // Parent Portfolio Account UUID
+  string account_id = 2;
+  // Transaction UUID
+  string transaction_id = 3;
+  // Amount in asset's smallest unit e.g. Satoshi for Bitcoin
+  string amount = 4;
+  // CREDIT or DEBIT
+  string direction = 5;
+  google.protobuf.Timestamp created_at = 6;
+}

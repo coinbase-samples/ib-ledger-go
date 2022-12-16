@@ -1,0 +1,217 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "pkg/pbs/ledger/v1/service.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "Ledger"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1Account": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "portfolioId": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1AccountAndBalance": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "balance": {
+          "type": "string"
+        },
+        "hold": {
+          "type": "string"
+        },
+        "available": {
+          "type": "string"
+        },
+        "balanceAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1AccountBalance": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "balance": {
+          "type": "string"
+        },
+        "hold": {
+          "type": "string"
+        },
+        "available": {
+          "type": "string"
+        },
+        "accountId": {
+          "type": "string"
+        }
+      }
+    },
+    "v1CreateTransactionResponse": {
+      "type": "object",
+      "properties": {
+        "transaction": {
+          "$ref": "#/definitions/v1Transaction"
+        }
+      }
+    },
+    "v1FinalizeTransactionResponse": {
+      "type": "object",
+      "properties": {
+        "successful": {
+          "type": "boolean"
+        },
+        "failureMessage": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetAccountsResponse": {
+      "type": "object",
+      "properties": {
+        "accounts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1AccountAndBalance"
+          }
+        }
+      }
+    },
+    "v1InitializeAccountResponse": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/v1Account"
+        },
+        "accountBalance": {
+          "$ref": "#/definitions/v1AccountBalance"
+        }
+      }
+    },
+    "v1PartialReleaseHoldResponse": {
+      "type": "object",
+      "properties": {
+        "successful": {
+          "type": "boolean"
+        },
+        "failureMessage": {
+          "type": "string"
+        }
+      }
+    },
+    "v1Transaction": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "senderId": {
+          "type": "string"
+        },
+        "receiverId": {
+          "type": "string"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "transactionType": {
+          "$ref": "#/definitions/v1TransactionType"
+        },
+        "transactionStatus": {
+          "$ref": "#/definitions/v1TransactionStatus"
+        },
+        "finalizedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1TransactionStatus": {
+      "type": "string",
+      "enum": [
+        "TRANSACTION_STATUS_UNSPECIFIED",
+        "TRANSACTION_STATUS_COMPLETE",
+        "TRANSACTION_STATUS_FAILED",
+        "TRANSACTION_STATUS_CANCELED",
+        "TRANSACTION_STATUS_PENDING"
+      ],
+      "default": "TRANSACTION_STATUS_UNSPECIFIED"
+    },
+    "v1TransactionType": {
+      "type": "string",
+      "enum": [
+        "TRANSACTION_TYPE_UNSPECIFIED",
+        "TRANSACTION_TYPE_TRANSFER",
+        "TRANSACTION_TYPE_ORDER",
+        "TRANSACTION_TYPE_CONVERT"
+      ],
+      "default": "TRANSACTION_TYPE_UNSPECIFIED"
+    }
+  }
+}
