@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Coinbase Global, Inc.
+ * Copyright 2022-present Coinbase Global, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,10 @@
 package main
 
 import (
-	"github.com/coinbase-samples/ib-ledger-go/config"
+	"github.com/coinbase-samples/ib-ledger-go/internal/config"
+	"github.com/coinbase-samples/ib-ledger-go/internal/consumer"
+	"github.com/coinbase-samples/ib-ledger-go/internal/qldb"
+	"github.com/coinbase-samples/ib-ledger-go/internal/relationaldb"
 )
 
 func main() {
@@ -26,8 +29,16 @@ func main() {
 
 	config.Setup(&app)
 	logrusLogger := config.LogInit(app)
-	logrusLogger.Debugf("starting app with config - %v", app)
 
 	config.ValidateConfig(app, logrusLogger)
+
+	cfg := app.GenerateAwsConfig(logrusLogger)
+
+	qldb.NewRepository(logrusLogger, &app, &cfg)
+	relationaldb.NewRepo(&app, logrusLogger)
+	consumer.NewRepo(&app, &cfg)
+
+	go consumer.Listen(logrusLogger)
+
 	gRPCListen(app, logrusLogger)
 }

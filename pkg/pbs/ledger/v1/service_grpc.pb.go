@@ -25,7 +25,7 @@ type LedgerClient interface {
 	InitializeAccount(ctx context.Context, in *InitializeAccountRequest, opts ...grpc.CallOption) (*InitializeAccountResponse, error)
 	GetAccounts(ctx context.Context, in *GetAccountsRequest, opts ...grpc.CallOption) (*GetAccountsResponse, error)
 	CreateTransaction(ctx context.Context, in *CreateTransactionRequest, opts ...grpc.CallOption) (*CreateTransactionResponse, error)
-	PartialReleaseHold(ctx context.Context, in *PartialReleaseHoldRequest, opts ...grpc.CallOption) (*PartialReleaseHoldResponse, error)
+	PostFill(ctx context.Context, in *PostFillRequest, opts ...grpc.CallOption) (*PostFillResponse, error)
 	FinalizeTransaction(ctx context.Context, in *FinalizeTransactionRequest, opts ...grpc.CallOption) (*FinalizeTransactionResponse, error)
 }
 
@@ -64,9 +64,9 @@ func (c *ledgerClient) CreateTransaction(ctx context.Context, in *CreateTransact
 	return out, nil
 }
 
-func (c *ledgerClient) PartialReleaseHold(ctx context.Context, in *PartialReleaseHoldRequest, opts ...grpc.CallOption) (*PartialReleaseHoldResponse, error) {
-	out := new(PartialReleaseHoldResponse)
-	err := c.cc.Invoke(ctx, "/pkg.pbs.ledger.v1.Ledger/PartialReleaseHold", in, out, opts...)
+func (c *ledgerClient) PostFill(ctx context.Context, in *PostFillRequest, opts ...grpc.CallOption) (*PostFillResponse, error) {
+	out := new(PostFillResponse)
+	err := c.cc.Invoke(ctx, "/pkg.pbs.ledger.v1.Ledger/PostFill", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ type LedgerServer interface {
 	InitializeAccount(context.Context, *InitializeAccountRequest) (*InitializeAccountResponse, error)
 	GetAccounts(context.Context, *GetAccountsRequest) (*GetAccountsResponse, error)
 	CreateTransaction(context.Context, *CreateTransactionRequest) (*CreateTransactionResponse, error)
-	PartialReleaseHold(context.Context, *PartialReleaseHoldRequest) (*PartialReleaseHoldResponse, error)
+	PostFill(context.Context, *PostFillRequest) (*PostFillResponse, error)
 	FinalizeTransaction(context.Context, *FinalizeTransactionRequest) (*FinalizeTransactionResponse, error)
 	mustEmbedUnimplementedLedgerServer()
 }
@@ -107,8 +107,8 @@ func (UnimplementedLedgerServer) GetAccounts(context.Context, *GetAccountsReques
 func (UnimplementedLedgerServer) CreateTransaction(context.Context, *CreateTransactionRequest) (*CreateTransactionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTransaction not implemented")
 }
-func (UnimplementedLedgerServer) PartialReleaseHold(context.Context, *PartialReleaseHoldRequest) (*PartialReleaseHoldResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PartialReleaseHold not implemented")
+func (UnimplementedLedgerServer) PostFill(context.Context, *PostFillRequest) (*PostFillResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PostFill not implemented")
 }
 func (UnimplementedLedgerServer) FinalizeTransaction(context.Context, *FinalizeTransactionRequest) (*FinalizeTransactionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FinalizeTransaction not implemented")
@@ -180,20 +180,20 @@ func _Ledger_CreateTransaction_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Ledger_PartialReleaseHold_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PartialReleaseHoldRequest)
+func _Ledger_PostFill_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PostFillRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(LedgerServer).PartialReleaseHold(ctx, in)
+		return srv.(LedgerServer).PostFill(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pkg.pbs.ledger.v1.Ledger/PartialReleaseHold",
+		FullMethod: "/pkg.pbs.ledger.v1.Ledger/PostFill",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LedgerServer).PartialReleaseHold(ctx, req.(*PartialReleaseHoldRequest))
+		return srv.(LedgerServer).PostFill(ctx, req.(*PostFillRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -236,8 +236,8 @@ var Ledger_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Ledger_CreateTransaction_Handler,
 		},
 		{
-			MethodName: "PartialReleaseHold",
-			Handler:    _Ledger_PartialReleaseHold_Handler,
+			MethodName: "PostFill",
+			Handler:    _Ledger_PostFill_Handler,
 		},
 		{
 			MethodName: "FinalizeTransaction",

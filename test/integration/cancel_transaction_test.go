@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Coinbase Global, Inc.
+ * Copyright 2022-present Coinbase Global, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/amzn/ion-go/ion"
+	"github.com/coinbase-samples/ib-ledger-go/internal/model"
 	ledger "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
-	"github.com/stretchr/testify/assert"
+	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -30,61 +32,60 @@ func TestSuccessfulCancelTransaction(t *testing.T) {
 
 	ledgerClient := newLedgerServiceClient(ctx, t)
 
-	orderId := "356798E8-2CE3-4D49-BD66-2BEC6C95AF4A"
+	userId := uuid.New().String()
+	setupAccounts(t, ctx, ledgerClient, userId)
+
+	orderId := uuid.New().String()
 	createTransactionRequest := &ledger.CreateTransactionRequest{
 		OrderId: orderId,
 		Sender: &ledger.Account{
-			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
+			UserId:   userId,
 			Currency: "USD",
 		},
 		Receiver: &ledger.Account{
-			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
+			UserId:   userId,
 			Currency: "ETH",
 		},
-		TotalAmount:     "1000",
+		TotalAmount:     "10000",
+		FeeAmount:       &wrapperspb.StringValue{Value: "100"},
 		TransactionType: ledger.TransactionType_TRANSACTION_TYPE_TRANSFER,
-		RequestId:       &wrapperspb.StringValue{Value: "E9115CD9-8E15-44B9-A3C1-4F5EC87FE12F"},
+		RequestId:       &wrapperspb.StringValue{Value: "85688730-9A34-4F9C-8475-7521B957F164"},
 	}
-	createTransactionAndConfirmHolds(ledgerClient, ctx, t, createTransactionRequest)
 
-	senderExpectedBalance := &ledger.AccountAndBalance{
+	createTransaction(ledgerClient, ctx, t, createTransactionRequest)
+
+	usdAccount := &model.QldbAccount{
+		Id:        model.GenerateAccountId(userId, "USD"),
+		UserId:    userId,
 		Currency:  "USD",
-		Balance:   "100000",
-		Hold:      "1000",
-		Available: "99000",
+		Balance:   ion.MustParseDecimal("100000"),
+		Hold:      ion.MustParseDecimal("10100"),
+		Available: ion.MustParseDecimal("89900"),
 	}
-	receiverExpectedBalance := &ledger.AccountAndBalance{
+
+	ethAccount := &model.QldbAccount{
+		Id:        model.GenerateAccountId(userId, "ETH"),
+		UserId:    userId,
 		Currency:  "ETH",
-		Balance:   "100000",
-		Hold:      "0",
-		Available: "100000",
+		Balance:   ion.MustParseDecimal("0"),
+		Hold:      ion.MustParseDecimal("0"),
+		Available: ion.MustParseDecimal("0"),
 	}
 
-	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
+	getAccountsAndConfirmBalances(t, ctx, ledgerClient, userId, usdAccount, ethAccount)
 
-	finalizeResult, err := ledgerClient.FinalizeTransaction(ctx, &ledger.FinalizeTransactionRequest{
+	if _, err := ledgerClient.FinalizeTransaction(ctx, &ledger.FinalizeTransactionRequest{
 		OrderId:         orderId,
-		RequestId:       "A23CE1FB-4221-4CB0-8E8F-8D5B7C3C4FA3",
 		FinalizedStatus: ledger.TransactionStatus_TRANSACTION_STATUS_CANCELED,
-	})
-
-	if err != nil {
-		t.Fatalf("unable to fail transaction: %v", err.Error())
+	}); err != nil {
+		t.Fatalf("unable to finalize transaction: %v", err)
 	}
 
-	assert.True(t, finalizeResult.Successful)
-
-	senderExpectedBalance = &ledger.AccountAndBalance{
-		Currency:  "USD",
-		Balance:   "100000",
-		Hold:      "0",
-		Available: "100000",
-	}
-	receiverExpectedBalance = &ledger.AccountAndBalance{
-		Currency:  "ETH",
-		Balance:   "100000",
-		Hold:      "0",
-		Available: "100000",
-	}
-	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
+	usdAccount.Balance = ion.MustParseDecimal("100000")
+	usdAccount.Hold = ion.MustParseDecimal("0")
+	usdAccount.Available = ion.MustParseDecimal("100000")
+	ethAccount.Balance = ion.MustParseDecimal("0")
+	ethAccount.Hold = ion.MustParseDecimal("0")
+	ethAccount.Available = ion.MustParseDecimal("0")
+	getAccountsAndConfirmBalances(t, ctx, ledgerClient, userId, usdAccount, ethAccount)
 }

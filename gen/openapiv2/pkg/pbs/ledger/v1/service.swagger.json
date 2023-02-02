@@ -89,44 +89,11 @@
         }
       }
     },
-    "v1AccountBalance": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "balance": {
-          "type": "string"
-        },
-        "hold": {
-          "type": "string"
-        },
-        "available": {
-          "type": "string"
-        },
-        "accountId": {
-          "type": "string"
-        }
-      }
-    },
     "v1CreateTransactionResponse": {
-      "type": "object",
-      "properties": {
-        "transaction": {
-          "$ref": "#/definitions/v1Transaction"
-        }
-      }
+      "type": "object"
     },
     "v1FinalizeTransactionResponse": {
-      "type": "object",
-      "properties": {
-        "successful": {
-          "type": "boolean"
-        },
-        "failureMessage": {
-          "type": "string"
-        }
-      }
+      "type": "object"
     },
     "v1GetAccountsResponse": {
       "type": "object",
@@ -140,57 +107,10 @@
       }
     },
     "v1InitializeAccountResponse": {
-      "type": "object",
-      "properties": {
-        "account": {
-          "$ref": "#/definitions/v1Account"
-        },
-        "accountBalance": {
-          "$ref": "#/definitions/v1AccountBalance"
-        }
-      }
+      "type": "object"
     },
-    "v1PartialReleaseHoldResponse": {
-      "type": "object",
-      "properties": {
-        "successful": {
-          "type": "boolean"
-        },
-        "failureMessage": {
-          "type": "string"
-        }
-      }
-    },
-    "v1Transaction": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "senderId": {
-          "type": "string"
-        },
-        "receiverId": {
-          "type": "string"
-        },
-        "requestId": {
-          "type": "string"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "transactionType": {
-          "$ref": "#/definitions/v1TransactionType"
-        },
-        "transactionStatus": {
-          "$ref": "#/definitions/v1TransactionStatus"
-        },
-        "finalizedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
-      }
+    "v1PostFillResponse": {
+      "type": "object"
     },
     "v1TransactionStatus": {
       "type": "string",

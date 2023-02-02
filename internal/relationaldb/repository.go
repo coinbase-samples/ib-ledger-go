@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Coinbase Global, Inc.
+ * Copyright 2023-present Coinbase Global, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dbmanager
+package relationaldb
 
 import (
 	"context"
@@ -22,30 +22,42 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/coinbase-samples/ib-ledger-go/config"
+	"github.com/coinbase-samples/ib-ledger-go/internal/config"
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/jackc/pgx/v5/pgxpool"
 	log "github.com/sirupsen/logrus"
 )
 
-type PostgresDBManager struct {
+var Repo *Repository
+
+type Repository struct {
 	Pool *pgxpool.Pool
 }
 
-func NewPostgresDBManager(app *config.AppConfig, l *log.Entry) *PostgresDBManager {
+type DbManager interface {
+	Query(ctx context.Context, dest interface{}, query string, args ...interface{}) error
+	Insert(ctx context.Context, sql string, args ...interface{}) error
+}
 
+func NewRepo(a *config.AppConfig, l *log.Entry) {
 	var dbCredsJson map[string]interface{}
-	err := json.Unmarshal([]byte(app.DbCreds), &dbCredsJson)
+	err := json.Unmarshal([]byte(a.DbCreds), &dbCredsJson)
 	if err != nil {
-		l.Fatalf("unable to unmarshal the cred string")
+		l.Fatal("unable to unmarshal the database credentials string")
 	}
 
 	dbUsername := dbCredsJson["username"].(string)
 	dbPassword := url.QueryEscape(dbCredsJson["password"].(string))
 
-	dbUrl := fmt.Sprintf("postgres://%s:%s@%s:%s/ledger", dbUsername, dbPassword, app.DbHostname, app.DbPort)
+	dbUrl := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/ledger",
+		dbUsername,
+		dbPassword,
+		a.DbHostname,
+		a.DbPort,
+	)
 
-	if app.IsLocalEnv() {
+	if a.IsLocalEnv() {
 		dbUrl += "?sslmode=disable"
 	}
 
@@ -54,9 +66,25 @@ func NewPostgresDBManager(app *config.AppConfig, l *log.Entry) *PostgresDBManage
 		l.Fatalf("failed to establish DB Pool: %v", err.Error())
 	}
 
-	return &PostgresDBManager{Pool: pool}
+	Repo = &Repository{
+		Pool: pool,
+	}
 }
 
-func (d *PostgresDBManager) Query(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	return pgxscan.Select(ctx, d.Pool, dest, query, args...)
+func (r *Repository) Query(
+	ctx context.Context,
+	dest interface{},
+	query string,
+	args ...interface{},
+) error {
+	return pgxscan.Select(ctx, r.Pool, dest, query, args...)
+}
+
+func (r *Repository) Insert(
+	ctx context.Context,
+	sql string,
+	args ...interface{},
+) error {
+	_, err := r.Pool.Exec(ctx, sql, args...)
+	return err
 }

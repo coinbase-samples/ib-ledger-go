@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Coinbase Global, Inc.
+ * Copyright 2023-present Coinbase Global, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,5 +14,21 @@
  * limitations under the License.
  */
 
-DROP FUNCTION partial_release_hold;
-DROP TYPE transaction_result;
+package qldb
+
+import "fmt"
+
+type AccountNotFoundError struct {
+	Id string
+}
+
+func (e *AccountNotFoundError) Error() string {
+	return fmt.Sprintf("account not found: %s", e.Id)
+}
+
+type InsufficientBalanceError struct {
+}
+
+func (e *InsufficientBalanceError) Error() string {
+	return "insufficient available balance"
+}

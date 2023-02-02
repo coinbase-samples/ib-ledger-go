@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Coinbase Global, Inc.
+ * Copyright 2022-present Coinbase Global, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,20 +29,18 @@ service Ledger {
   rpc InitializeAccount(InitializeAccountRequest) returns (InitializeAccountResponse) {}
   rpc GetAccounts(GetAccountsRequest) returns (GetAccountsResponse) {}
   rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionResponse) {}
-  rpc PartialReleaseHold(PartialReleaseHoldRequest) returns (PartialReleaseHoldResponse) {}
+  rpc PostFill(PostFillRequest) returns (PostFillResponse) {}
   rpc FinalizeTransaction(FinalizeTransactionRequest) returns (FinalizeTransactionResponse) {}
 }
 
 message InitializeAccountRequest {
-  string portfolioId = 1[(validate.rules).string.len = 36];
+  string portfolioId = 1;
   string userId = 2[(validate.rules).string.len = 36];
   string currency = 3[(validate.rules).string.min_len = 3];
+  string initialBalance = 4;
 }
 
-message InitializeAccountResponse {
-  Account account = 1[(validate.rules).message.required = true];
-  AccountBalance accountBalance = 2[(validate.rules).message.required = true];
-}
+message InitializeAccountResponse {}
 
 message GetAccountsRequest {
   string userId = 1[(validate.rules).string.len = 36];
@@ -63,21 +61,23 @@ message CreateTransactionRequest {
 }
 
 message CreateTransactionResponse {
-  Transaction transaction = 1;
 }
 
-message PartialReleaseHoldRequest {
+message PostFillRequest {
   string orderId = 1[(validate.rules).string.len = 36];
   string requestId = 2;
   string senderAmount = 3;
   string receiverAmount = 4;
   google.protobuf.StringValue venueFeeAmount = 6;
   google.protobuf.StringValue retailFeeAmount = 7;
+  string fillId = 8[(validate.rules).string.len = 36];
+  string filledQuantity = 9;
+  string filledValue = 10;
+  string productId = 12;
+  string side = 13;
 }
 
-message PartialReleaseHoldResponse {
-  bool successful = 1;
-  google.protobuf.StringValue failureMessage = 2;
+message PostFillResponse {
 }
 
 message FinalizeTransactionRequest {
@@ -91,6 +91,4 @@ message FinalizeTransactionRequest {
 }
 
 message FinalizeTransactionResponse {
-  bool successful = 1;
-  google.protobuf.StringValue failureMessage = 2;
 }

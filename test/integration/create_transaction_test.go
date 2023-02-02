@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Coinbase Global, Inc.
+ * Copyright 2022-present Coinbase Global, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ func TestCreateTransactionAccountNotFound(t *testing.T) {
 	ctx := context.Background()
 	ledgerClient := newLedgerServiceClient(ctx, t)
 
-	_, err := ledgerClient.CreateTransaction(ctx, &ledger.CreateTransactionRequest{
+	if _, err := ledgerClient.CreateTransaction(ctx, &ledger.CreateTransactionRequest{
 		OrderId: "5AFD5F86-AF2C-45D8-8D92-105EC153A0C6",
 		Sender: &ledger.Account{
 			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
@@ -43,9 +43,7 @@ func TestCreateTransactionAccountNotFound(t *testing.T) {
 		FeeAmount:       &wrapperspb.StringValue{Value: "5"},
 		TransactionType: ledger.TransactionType_TRANSACTION_TYPE_TRANSFER,
 		RequestId:       &wrapperspb.StringValue{Value: "27AA0E33-FC64-4D80-A811-C9BB3416692A"},
-	})
-
-	if err == nil {
+	}); err == nil {
 		t.Fatal("expected CreateTransaction with CELO account to fail")
 	}
 }

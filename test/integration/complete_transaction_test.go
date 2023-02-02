@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Coinbase Global, Inc.
+ * Copyright 2022-present Coinbase Global, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,11 @@ import (
 	"context"
 	"testing"
 
+	"github.com/amzn/ion-go/ion"
+	"github.com/coinbase-samples/ib-ledger-go/internal/model"
+	"github.com/google/uuid"
+
 	ledger "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
-	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -30,94 +33,148 @@ func TestSuccessfulCompleteTransaction(t *testing.T) {
 
 	ledgerClient := newLedgerServiceClient(ctx, t)
 
-	orderId := "10D0DF21-88E0-4076-8CD7-58F761E26F40"
+	userId := uuid.NewString()
+	setupAccounts(t, ctx, ledgerClient, userId)
+
+	orderId := uuid.NewString()
 	createTransactionRequest := &ledger.CreateTransactionRequest{
 		OrderId: orderId,
 		Sender: &ledger.Account{
-			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
+			UserId:   userId,
 			Currency: "USD",
 		},
 		Receiver: &ledger.Account{
-			UserId:   "620E62FD-DAF1-4738-84CE-1DBC4393ED29",
+			UserId:   userId,
 			Currency: "ETH",
 		},
-		TotalAmount:     "1000",
+		TotalAmount:     "10000",
+		FeeAmount:       &wrapperspb.StringValue{Value: "100"},
 		TransactionType: ledger.TransactionType_TRANSACTION_TYPE_TRANSFER,
 		RequestId:       &wrapperspb.StringValue{Value: "85688730-9A34-4F9C-8475-7521B957F164"},
 	}
 
-	createTransactionAndConfirmHolds(ledgerClient, ctx, t, createTransactionRequest)
+	createTransaction(ledgerClient, ctx, t, createTransactionRequest)
 
-	senderExpectedBalance := &ledger.AccountAndBalance{
+	usdAccount := &model.QldbAccount{
+		Id:        model.GenerateAccountId(userId, "USD"),
+		UserId:    userId,
 		Currency:  "USD",
-		Balance:   "100000",
-		Hold:      "1000",
-		Available: "99000",
+		Balance:   ion.MustParseDecimal("100000"),
+		Hold:      ion.MustParseDecimal("10100"),
+		Available: ion.MustParseDecimal("89900"),
 	}
-	receiverExpectedBalance := &ledger.AccountAndBalance{
+
+	ethAccount := &model.QldbAccount{
+		Id:        model.GenerateAccountId(userId, "ETH"),
+		UserId:    userId,
 		Currency:  "ETH",
-		Balance:   "100000",
-		Hold:      "0",
-		Available: "100000",
+		Balance:   ion.MustParseDecimal("0"),
+		Hold:      ion.MustParseDecimal("0"),
+		Available: ion.MustParseDecimal("0"),
 	}
 
-	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
+	getAccountsAndConfirmBalances(t, ctx, ledgerClient, userId, usdAccount, ethAccount)
 
-	partialReleaseHoldAndConfirmSuccessful(ledgerClient, ctx, t, &ledger.PartialReleaseHoldRequest{
+	_, err := ledgerClient.PostFill(ctx, &ledger.PostFillRequest{
 		OrderId:        orderId,
-		RequestId:      "11A40B5B-74AA-4CBD-A04B-AADC4F0487E8",
-		SenderAmount:   "1",
-		ReceiverAmount: "10",
-	})
-
-	senderExpectedBalance = &ledger.AccountAndBalance{
-		Currency:  "USD",
-		Balance:   "99999",
-		Hold:      "999",
-		Available: "99000",
-	}
-	receiverExpectedBalance = &ledger.AccountAndBalance{
-		Currency:  "ETH",
-		Balance:   "100010",
-		Hold:      "0",
-		Available: "100010",
-	}
-
-	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
-
-	partialReleaseHoldAndConfirmSuccessful(ledgerClient, ctx, t, &ledger.PartialReleaseHoldRequest{
-		OrderId:        orderId,
-		RequestId:      "7795D23A-D273-442B-B588-CD718E11E2E5",
-		SenderAmount:   "999",
-		ReceiverAmount: "10",
-	})
-
-	senderExpectedBalance = &ledger.AccountAndBalance{
-		Currency:  "USD",
-		Balance:   "99000",
-		Hold:      "0",
-		Available: "99000",
-	}
-	receiverExpectedBalance = &ledger.AccountAndBalance{
-		Currency:  "ETH",
-		Balance:   "100020",
-		Hold:      "0",
-		Available: "100020",
-	}
-
-	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
-
-	finalizeResponse, err := ledgerClient.FinalizeTransaction(ctx, &ledger.FinalizeTransactionRequest{
-		OrderId:         orderId,
-		RequestId:       "E2586CC8-2879-48B2-83E2-F1F5CF87E248",
-		FinalizedStatus: ledger.TransactionStatus_TRANSACTION_STATUS_COMPLETE,
+		FillId:         "11A40B5B-74AA-4CBD-A04B-AADC4F0487E8",
+		FilledValue:    "1000",
+		FilledQuantity: "1",
 	})
 
 	if err != nil {
-		t.Fatalf("unable to complete transaction")
+		t.Fatalf("unable to post fill: %v", err)
 	}
 
-	assert.True(t, finalizeResponse.Successful)
+	usdAccount.Balance = ion.MustParseDecimal("99000")
+	usdAccount.Hold = ion.MustParseDecimal("9100")
+	usdAccount.Available = ion.MustParseDecimal("89900")
+	ethAccount.Balance = ion.MustParseDecimal("1")
+	ethAccount.Hold = ion.MustParseDecimal("0")
+	ethAccount.Available = ion.MustParseDecimal("1")
+	getAccountsAndConfirmBalances(t, ctx, ledgerClient, userId, usdAccount, ethAccount)
 
-	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
+	_, err = ledgerClient.PostFill(ctx, &ledger.PostFillRequest{
+		OrderId:         orderId,
+		FillId:          uuid.NewString(),
+		FilledValue:     "9000",
+		FilledQuantity:  "9",
+		VenueFeeAmount:  &wrapperspb.StringValue{Value: "50"},
+		RetailFeeAmount: &wrapperspb.StringValue{Value: "50"},
+	})
+
+	if err != nil {
+		t.Fatalf("unable to post fill: %v", err)
+	}
+
+	usdAccount.Balance = ion.MustParseDecimal("89900")
+	usdAccount.Hold = ion.MustParseDecimal("0")
+	usdAccount.Available = ion.MustParseDecimal("89900")
+	ethAccount.Balance = ion.MustParseDecimal("10")
+	ethAccount.Hold = ion.MustParseDecimal("0")
+	ethAccount.Available = ion.MustParseDecimal("10")
+	getAccountsAndConfirmBalances(t, ctx, ledgerClient, userId, usdAccount, ethAccount)
+
+	if _, err := ledgerClient.FinalizeTransaction(ctx, &ledger.FinalizeTransactionRequest{
+		OrderId:         orderId,
+		FinalizedStatus: ledger.TransactionStatus_TRANSACTION_STATUS_COMPLETE,
+	}); err != nil {
+		t.Fatalf("unable to finalize transaction: %v", err)
+	}
+
+	getAccountsAndConfirmBalances(t, ctx, ledgerClient, userId, usdAccount, ethAccount)
+
+	orderId = uuid.NewString()
+	createTransactionRequest = &ledger.CreateTransactionRequest{
+		OrderId: orderId,
+		Sender: &ledger.Account{
+			UserId:   userId,
+			Currency: "ETH",
+		},
+		Receiver: &ledger.Account{
+			UserId:   userId,
+			Currency: "USD",
+		},
+		TotalAmount:     "10",
+		TransactionType: ledger.TransactionType_TRANSACTION_TYPE_TRANSFER,
+		RequestId:       &wrapperspb.StringValue{Value: "85688730-9A34-4F9C-8475-7521B957F164"},
+	}
+
+	createTransaction(ledgerClient, ctx, t, createTransactionRequest)
+
+	usdAccount.Balance = ion.MustParseDecimal("89900")
+	usdAccount.Hold = ion.MustParseDecimal("0")
+	usdAccount.Available = ion.MustParseDecimal("89900")
+	ethAccount.Balance = ion.MustParseDecimal("10")
+	ethAccount.Hold = ion.MustParseDecimal("10")
+	ethAccount.Available = ion.MustParseDecimal("0")
+	getAccountsAndConfirmBalances(t, ctx, ledgerClient, userId, usdAccount, ethAccount)
+
+	_, err = ledgerClient.PostFill(ctx, &ledger.PostFillRequest{
+		OrderId:        orderId,
+		FillId:         uuid.NewString(),
+		FilledValue:    "10",
+		FilledQuantity: "10100",
+	})
+
+	if err != nil {
+		t.Fatalf("unable to post fill: %v", err)
+	}
+
+	usdAccount.Balance = ion.MustParseDecimal("100000")
+	usdAccount.Hold = ion.MustParseDecimal("0")
+	usdAccount.Available = ion.MustParseDecimal("100000")
+	ethAccount.Balance = ion.MustParseDecimal("0")
+	ethAccount.Hold = ion.MustParseDecimal("0")
+	ethAccount.Available = ion.MustParseDecimal("0")
+	getAccountsAndConfirmBalances(t, ctx, ledgerClient, userId, usdAccount, ethAccount)
+
+	if _, err := ledgerClient.FinalizeTransaction(ctx, &ledger.FinalizeTransactionRequest{
+		OrderId:         orderId,
+		FinalizedStatus: ledger.TransactionStatus_TRANSACTION_STATUS_COMPLETE,
+	}); err != nil {
+		t.Fatalf("unable to finalize transaction: %v", err)
+	}
+
+	getAccountsAndConfirmBalances(t, ctx, ledgerClient, userId, usdAccount, ethAccount)
 }
