@@ -56,14 +56,13 @@ func createTransactionAndConfirmHolds(l ledger.LedgerClient, ctx context.Context
 
 }
 
-func partialReleaseHoldAndConfirmSuccessful(l ledger.LedgerClient, ctx context.Context, t *testing.T, pr *ledger.PartialReleaseHoldRequest) {
-	tr, err := l.PartialReleaseHold(ctx, pr)
+func partialReleaseHoldAndConfirmSuccessful(l ledger.LedgerClient, ctx context.Context, t *testing.T, pr *ledger.PostFillRequest) {
+	tr, err := l.PostFill(ctx, pr)
 
 	if err != nil {
 		t.Fatalf("unable to partial release hold")
 	}
 
-	assert.True(t, tr.Successful)
 }
 
 func getTransactionBalancesAndConfirmTheyAreAsExpected(

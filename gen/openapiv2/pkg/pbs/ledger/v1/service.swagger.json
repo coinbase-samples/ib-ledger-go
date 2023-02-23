@@ -118,15 +118,7 @@
       }
     },
     "v1FinalizeTransactionResponse": {
-      "type": "object",
-      "properties": {
-        "successful": {
-          "type": "boolean"
-        },
-        "failureMessage": {
-          "type": "string"
-        }
-      }
+      "type": "object"
     },
     "v1GetAccountsResponse": {
       "type": "object",
@@ -150,16 +142,8 @@
         }
       }
     },
-    "v1PartialReleaseHoldResponse": {
-      "type": "object",
-      "properties": {
-        "successful": {
-          "type": "boolean"
-        },
-        "failureMessage": {
-          "type": "string"
-        }
-      }
+    "v1PostFillResponse": {
+      "type": "object"
     },
     "v1Transaction": {
       "type": "object",

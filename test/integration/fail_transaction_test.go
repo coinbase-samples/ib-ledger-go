@@ -63,7 +63,7 @@ func FailTransactionSucceedsTest(t *testing.T) {
 
 	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
 
-	partialReleaseHoldAndConfirmSuccessful(ledgerClient, ctx, t, &ledger.PartialReleaseHoldRequest{
+	partialReleaseHoldAndConfirmSuccessful(ledgerClient, ctx, t, &ledger.PostFillRequest{
 		OrderId:        orderId,
 		RequestId:      "4FC0EA00-1709-491B-BFD3-7EA85B9C7447",
 		SenderAmount:   "1",

@@ -43,7 +43,7 @@ func (m *MockRepository) CreateTransaction(ctx context.Context, request *api.Cre
 	return &model.CreateTransactionResult{}, nil
 }
 
-func (m *MockRepository) PartialReleaseHold(ctx context.Context, request *api.PartialReleaseHoldRequest) (*model.TransactionResult, error) {
+func (m *MockRepository) PartialReleaseHold(ctx context.Context, request *api.PostFillRequest) (*model.TransactionResult, error) {
 	return &model.TransactionResult{}, nil
 }
 

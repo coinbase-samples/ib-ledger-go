@@ -58,7 +58,7 @@ func (s *Service) CreateTransaction(ctx context.Context, req *api.CreateTransact
 	}, nil
 }
 
-func (s *Service) PartialReleaseHold(ctx context.Context, req *api.PartialReleaseHoldRequest) (*api.PartialReleaseHoldResponse, error) {
+func (s *Service) PostFill(ctx context.Context, req *api.PostFillRequest) (*api.PostFillResponse, error) {
 	l := ctxlogrus.Extract(ctx)
 
 	if err := req.ValidateAll(); err != nil {
@@ -70,9 +70,7 @@ func (s *Service) PartialReleaseHold(ctx context.Context, req *api.PartialReleas
 	if err != nil {
 		return nil, fmt.Errorf("ib-ledger-go: %w", err)
 	}
-	return &api.PartialReleaseHoldResponse{
-		Successful: true,
-	}, nil
+	return &api.PostFillResponse{}, nil
 }
 
 func (s *Service) FinalizeTransaction(ctx context.Context, req *api.FinalizeTransactionRequest) (*api.FinalizeTransactionResponse, error) {

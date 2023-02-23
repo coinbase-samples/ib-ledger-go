@@ -63,7 +63,7 @@ func TestSuccessfulCompleteTransaction(t *testing.T) {
 
 	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
 
-	partialReleaseHoldAndConfirmSuccessful(ledgerClient, ctx, t, &ledger.PartialReleaseHoldRequest{
+	partialReleaseHoldAndConfirmSuccessful(ledgerClient, ctx, t, &ledger.PostFillRequest{
 		OrderId:        orderId,
 		RequestId:      "11A40B5B-74AA-4CBD-A04B-AADC4F0487E8",
 		SenderAmount:   "1",
@@ -85,7 +85,7 @@ func TestSuccessfulCompleteTransaction(t *testing.T) {
 
 	getTransactionBalancesAndConfirmTheyAreAsExpected(ledgerClient, ctx, t, senderExpectedBalance, receiverExpectedBalance)
 
-	partialReleaseHoldAndConfirmSuccessful(ledgerClient, ctx, t, &ledger.PartialReleaseHoldRequest{
+	partialReleaseHoldAndConfirmSuccessful(ledgerClient, ctx, t, &ledger.PostFillRequest{
 		OrderId:        orderId,
 		RequestId:      "7795D23A-D273-442B-B588-CD718E11E2E5",
 		SenderAmount:   "999",

@@ -194,7 +194,7 @@ func (pr *PostgresRepository) CreateTransaction(ctx context.Context, request *ap
 	return createTransactionResult[0], nil
 }
 
-func (pr *PostgresRepository) PartialReleaseHold(ctx context.Context, request *api.PartialReleaseHoldRequest) (*model.TransactionResult, error) {
+func (pr *PostgresRepository) PartialReleaseHold(ctx context.Context, request *api.PostFillRequest) (*model.TransactionResult, error) {
 	var TransactionResult []*model.TransactionResult
 
 	var retailFeeAmount string

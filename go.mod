@@ -1,6 +1,6 @@
 module github.com/coinbase-samples/ib-ledger-go
 
-go 1.18
+go 1.19
 
 require (
 	github.com/envoyproxy/protoc-gen-validate v0.9.1
