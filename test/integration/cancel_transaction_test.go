@@ -50,6 +50,7 @@ func TestSuccessfulCancelTransaction(t *testing.T) {
 		FeeAmount:       &wrapperspb.StringValue{Value: "100"},
 		TransactionType: ledger.TransactionType_TRANSACTION_TYPE_TRANSFER,
 		RequestId:       &wrapperspb.StringValue{Value: "85688730-9A34-4F9C-8475-7521B957F164"},
+		ProductId:       "ETH-USD",
 	}
 
 	createTransaction(ledgerClient, ctx, t, createTransactionRequest)

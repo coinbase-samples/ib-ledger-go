@@ -47,7 +47,7 @@ func (s *Service) CreateTransaction(
 		return nil, handleValidationError(err)
 	}
 
-	var orderAmount *big.Int
+	orderAmount := new(big.Int)
 	if err := utils.SetString(orderAmount, req.TotalAmount); err != nil {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
@@ -72,7 +72,7 @@ func (s *Service) CreateTransaction(
 		}
 	}
 
-	var holdAmount *big.Int
+	holdAmount := big.NewInt(0)
 	holdAmount.Add(orderAmount, feeAmount)
 
 	senderUserId := strings.ToLower(req.Sender.UserId)

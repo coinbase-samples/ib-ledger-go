@@ -43,11 +43,8 @@ func (s *Service) InitializeAccount(
 		return nil, handleValidationError(err)
 	}
 
-	var initialBalance *big.Int
-	if req.InitialBalance == "" {
-		initialBalance = big.NewInt(0)
-	} else {
-		var initialBalance *big.Int
+	initialBalance := big.NewInt(0)
+	if req.InitialBalance != "" {
 		if err := utils.SetString(initialBalance, req.InitialBalance); err != nil {
 			return nil, status.Errorf(
 				codes.InvalidArgument,

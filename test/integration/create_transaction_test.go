@@ -43,6 +43,7 @@ func TestCreateTransactionAccountNotFound(t *testing.T) {
 		FeeAmount:       &wrapperspb.StringValue{Value: "5"},
 		TransactionType: ledger.TransactionType_TRANSACTION_TYPE_TRANSFER,
 		RequestId:       &wrapperspb.StringValue{Value: "27AA0E33-FC64-4D80-A811-C9BB3416692A"},
+		ProductId:       "ETH-CELO",
 	}); err == nil {
 		t.Fatal("expected CreateTransaction with CELO account to fail")
 	}

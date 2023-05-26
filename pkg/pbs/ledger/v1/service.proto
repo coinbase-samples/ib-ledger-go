@@ -58,6 +58,7 @@ message CreateTransactionRequest {
   google.protobuf.StringValue feeAmount = 5;
   TransactionType transactionType = 6;
   google.protobuf.StringValue requestId = 7;
+  string productId = 8[(validate.rules).string.min_len = 7];
 }
 
 message CreateTransactionResponse {
@@ -73,8 +74,8 @@ message PostFillRequest {
   string fillId = 8[(validate.rules).string.len = 36];
   string filledQuantity = 9;
   string filledValue = 10;
-  string productId = 12;
-  string side = 13;
+  string productId = 12[(validate.rules).string.min_len = 7];
+  string side = 13[(validate.rules).string.min_len = 3];
 }
 
 message PostFillResponse {

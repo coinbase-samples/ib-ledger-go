@@ -38,7 +38,8 @@ func CreateAccountAndInitializeBalance(
 	userId, currency string,
 	initialBalance *big.Int,
 ) error {
-	_, err := Repo.Driver.Execute(ctx,
+	_, err := Repo.Driver.Execute(
+		ctx,
 		func(txn qldbdriver.Transaction) (interface{}, error) {
 			accountId := model.GenerateAccountId(userId, currency)
 			result, err := txn.Execute(selectAccountSql, accountId)
@@ -57,7 +58,7 @@ func CreateAccountAndInitializeBalance(
 
 			initialDecimal := ion.NewDecimal(initialBalance, 0, false)
 			a := &model.QldbAccount{
-				Id:          model.GenerateAccountId(userId, currency),
+				Id:          accountId,
 				Currency:    currency,
 				UserId:      userId,
 				Balance:     initialDecimal,
@@ -138,10 +139,7 @@ func creditAccountUpdate(
 		return err
 	}
 
-	available, err := utils.IonDecimalToBigInt(account.Available)
-	if err != nil {
-		return err
-	}
+	available := new(big.Int)
 	available.Sub(balance, hold)
 
 	_, err = txn.Execute(`
@@ -189,7 +187,7 @@ func debitAccountUpdate(
 	balance.Sub(balance, commission)
 	balance.Sub(balance, feeAmount)
 
-	var available *big.Int
+	available := new(big.Int)
 	available.Sub(balance, hold)
 
 	if _, err := txn.Execute(`

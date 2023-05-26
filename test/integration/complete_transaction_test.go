@@ -51,6 +51,7 @@ func TestSuccessfulCompleteTransaction(t *testing.T) {
 		FeeAmount:       &wrapperspb.StringValue{Value: "100"},
 		TransactionType: ledger.TransactionType_TRANSACTION_TYPE_TRANSFER,
 		RequestId:       &wrapperspb.StringValue{Value: "85688730-9A34-4F9C-8475-7521B957F164"},
+		ProductId:       "ETH-USD",
 	}
 
 	createTransaction(ledgerClient, ctx, t, createTransactionRequest)
@@ -80,6 +81,8 @@ func TestSuccessfulCompleteTransaction(t *testing.T) {
 		FillId:         "11A40B5B-74AA-4CBD-A04B-AADC4F0487E8",
 		FilledValue:    "1000",
 		FilledQuantity: "1",
+		Side:           "BUY",
+		ProductId:      "ETH-USD",
 	})
 
 	if err != nil {
@@ -101,6 +104,8 @@ func TestSuccessfulCompleteTransaction(t *testing.T) {
 		FilledQuantity:  "9",
 		VenueFeeAmount:  &wrapperspb.StringValue{Value: "50"},
 		RetailFeeAmount: &wrapperspb.StringValue{Value: "50"},
+		Side:            "BUY",
+		ProductId:       "ETH-USD",
 	})
 
 	if err != nil {
@@ -138,6 +143,7 @@ func TestSuccessfulCompleteTransaction(t *testing.T) {
 		TotalAmount:     "10",
 		TransactionType: ledger.TransactionType_TRANSACTION_TYPE_TRANSFER,
 		RequestId:       &wrapperspb.StringValue{Value: "85688730-9A34-4F9C-8475-7521B957F164"},
+		ProductId:       "ETH-USD",
 	}
 
 	createTransaction(ledgerClient, ctx, t, createTransactionRequest)
@@ -153,8 +159,10 @@ func TestSuccessfulCompleteTransaction(t *testing.T) {
 	_, err = ledgerClient.PostFill(ctx, &ledger.PostFillRequest{
 		OrderId:        orderId,
 		FillId:         uuid.NewString(),
-		FilledValue:    "10",
-		FilledQuantity: "10100",
+		FilledValue:    "10100",
+		FilledQuantity: "10",
+		ProductId:      "ETH-USD",
+		Side:           "SELL",
 	})
 
 	if err != nil {

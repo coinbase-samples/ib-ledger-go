@@ -33,9 +33,9 @@ const (
             finalized_at = $6, transaction_status = $7
         WHERE EXCLUDED.finalized_at IS NOT NULL`
 
-	insertEntriesSql = `
+	insertEntrySql = `
         INSERT INTO entry (id, account_id, venue_order_id, fill_id, amount, direction, created_at)
-        VALUES($1, $2, $3, $4, $5, $6, $7), ($8, $9, $10, $11, $12, $13, $14)
+        VALUES($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (id)
         DO NOTHING`
 
@@ -99,12 +99,9 @@ func InsertTransaction(
 }
 
 func InsertEntry(ctx context.Context, a, b *model.Entry) error {
-	appendArray := append([]string(nil), a.ToRow()...)
-	appendArray = append(appendArray, b.ToRow()...)
-	if err := Repo.Insert(
+	if err := Repo.Batch(
 		ctx,
-		insertEntriesSql,
-		appendArray,
+		[]*model.Entry{a, b},
 	); err != nil {
 		return fmt.Errorf(
 			"failed to insert entries - entry1: %s - entry2: %s - %w",

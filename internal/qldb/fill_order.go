@@ -275,6 +275,11 @@ func processFillAccountAndHoldUpdates(
 		return err
 	}
 
+	holdAmount, err := utils.IonDecimalToBigInt(t.Hold.Amount)
+	if err != nil {
+		return err
+	}
+
 	if side == config.Buy {
 		if err := processBuySideAccountUpdates(
 			txn,
@@ -290,6 +295,7 @@ func processFillAccountAndHoldUpdates(
 				err,
 			)
 		}
+		holdAmount.Sub(holdAmount, filledValueInt)
 	} else {
 		if err := processSellSideAccountUpdates(
 			txn,
@@ -305,20 +311,14 @@ func processFillAccountAndHoldUpdates(
 				err,
 			)
 		}
+		holdAmount.Sub(holdAmount, filledQuantityInt)
 	}
 
-	// Update Hold
-	hAmount, err := utils.IonDecimalToBigInt(t.Hold.Amount)
-	if err != nil {
-		return err
-	}
-
-	hAmount.Sub(hAmount, filledValueInt)
-	hAmount.Sub(hAmount, venueFeeInt)
-	hAmount.Sub(hAmount, retailFeeInt)
+	holdAmount.Sub(holdAmount, venueFeeInt)
+	holdAmount.Sub(holdAmount, retailFeeInt)
 
 	hold := t.Hold
-	hold.Amount = ion.NewDecimal(hAmount, 0, false)
+	hold.Amount = ion.NewDecimal(holdAmount, 0, false)
 
 	if _, err := txn.Execute(
 		"UPDATE Ledger AS t SET t.hold = ? WHERE t.id = ?",

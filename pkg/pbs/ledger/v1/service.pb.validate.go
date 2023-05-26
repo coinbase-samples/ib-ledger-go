@@ -692,6 +692,17 @@ func (m *CreateTransactionRequest) validate(all bool) error {
 		}
 	}
 
+	if utf8.RuneCountInString(m.GetProductId()) < 7 {
+		err := CreateTransactionRequestValidationError{
+			field:  "ProductId",
+			reason: "value length must be at least 7 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return CreateTransactionRequestMultiError(errors)
 	}
@@ -988,9 +999,27 @@ func (m *PostFillRequest) validate(all bool) error {
 
 	// no validation rules for FilledValue
 
-	// no validation rules for ProductId
+	if utf8.RuneCountInString(m.GetProductId()) < 7 {
+		err := PostFillRequestValidationError{
+			field:  "ProductId",
+			reason: "value length must be at least 7 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for Side
+	if utf8.RuneCountInString(m.GetSide()) < 3 {
+		err := PostFillRequestValidationError{
+			field:  "Side",
+			reason: "value length must be at least 3 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(errors) > 0 {
 		return PostFillRequestMultiError(errors)

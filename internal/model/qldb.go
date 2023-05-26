@@ -92,6 +92,7 @@ type QldbTransaction struct {
 	Status          string           `ion:"status"`
 	TransactionType string           `ion:"transactionType"`
 	Hold            *QldbHold        `ion:"hold"`
+	ProductId       string           `ion:"productId"`
 }
 
 func (q *QldbTransaction) ConvertToPostgresTransaction() (*Transaction, error) {

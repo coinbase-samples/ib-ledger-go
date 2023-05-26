@@ -49,6 +49,7 @@ type Transaction struct {
 	FinalizedAt       time.Time `db:"finalized_at"`
 	TransactionStatus string    `db:"transaction_status"`
 	TransactionType   string    `db:"transaction_type"`
+	ProductId         string    `db:"product_id"`
 }
 
 type Entry struct {

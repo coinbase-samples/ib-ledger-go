@@ -51,7 +51,8 @@ CREATE TABLE IF NOT EXISTS transaction (
     transaction_type TRANSACTION_TYPE NOT NULL,
     created_at TIMESTAMPTZ(3) DEFAULT NOW(),
     finalized_at TIMESTAMPTZ(3),
-    transaction_status TRANSACTION_STATUS
+    transaction_status TRANSACTION_STATUS,
+    product_id VARCHAR(16)
 );
 
 CREATE INDEX sender_transactions ON transaction USING HASH(sender_id);

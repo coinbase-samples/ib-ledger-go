@@ -23,7 +23,9 @@ import (
 	"net/url"
 
 	"github.com/coinbase-samples/ib-ledger-go/internal/config"
+	"github.com/coinbase-samples/ib-ledger-go/internal/model"
 	"github.com/georgysavva/scany/v2/pgxscan"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	log "github.com/sirupsen/logrus"
 )
@@ -87,4 +89,24 @@ func (r *Repository) Insert(
 ) error {
 	_, err := r.Pool.Exec(ctx, sql, args...)
 	return err
+}
+
+func (r *Repository) Batch(ctx context.Context, entries []*model.Entry) error {
+	batch := &pgx.Batch{}
+	for _, e := range entries {
+		entryRow := e.ToRow()
+		interfaceRow := make([]interface{}, len(entryRow))
+		batch.Queue(insertEntrySql, interfaceRow...)
+	}
+
+	results := r.Pool.SendBatch(ctx, batch)
+	defer results.Close()
+
+	for _, _ = range entries {
+		_, err := results.Exec()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
