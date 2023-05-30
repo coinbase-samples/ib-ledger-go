@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Coinbase Global, Inc.
+ * Copyright 2022-present- Present Coinbase Global, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,20 @@
  * limitations under the License.
  */
 
-package dbmanager
+package config
 
-import "context"
+import (
+	"os"
 
-type DBManager interface {
-	Query(ctx context.Context, dest interface{}, query string, args ...interface{}) error
+	"github.com/sirupsen/logrus"
+)
+
+func LogInit(app AppConfig) *logrus.Entry {
+	logger := logrus.New()
+	logLevel, _ := logrus.ParseLevel(app.LogLevel)
+	logger.SetLevel(logLevel)
+	logger.SetFormatter(&logrus.JSONFormatter{})
+	logger.SetReportCaller(true)
+	logger.SetOutput(os.Stdout)
+	return logrus.NewEntry(logger)
 }

@@ -1,4 +1,4 @@
-# Copyright 2022 Coinbase Global, Inc.
+# Copyright 2022-present Coinbase Global, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 
 version: '3.8'
 services:
-  db:
-    container_name: ledger_db
+  postgres:
+    container_name: ledger_postgres
     restart: always
     image: postgres:latest
     ports:

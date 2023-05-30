@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Coinbase Global, Inc.
+ * Copyright 2022-present Coinbase Global, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,11 @@
 package service
 
 import (
-	"github.com/coinbase-samples/ib-ledger-go/internal/repository"
+	"github.com/coinbase-samples/ib-ledger-go/internal/config"
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 )
 
 type Service struct {
+	App config.AppConfig
 	api.UnimplementedLedgerServer
-	Repository repository.Repository
-}
-
-func NewService(rep repository.Repository) *Service {
-	return &Service{Repository: rep}
 }

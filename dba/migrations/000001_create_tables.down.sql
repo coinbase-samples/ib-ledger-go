@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Coinbase Global, Inc.
+ * Copyright 2022-present Coinbase Global, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,19 +20,15 @@ DROP INDEX account_balance_index;
 DROP INDEX sender_transactions;
 DROP INDEX receiver_transactions;
 DROP INDEX transaction_entries;
-DROP INDEX request_entries;
+DROP INDEX fill_entries;
 DROP INDEX account_entries;
-DROP INDEX transaction_holds;
-DROP INDEX request_holds;
-DROP INDEX account_holds;
-DROP TABLE entry;
-DROP TABLE finalized_transaction;
-DROP TABLE released_hold;
 DROP TABLE hold;
+DROP TABLE entry;
 DROP TABLE transaction;
 DROP TABLE account_balance;
 DROP TABLE account;
-DROP TYPE direction;
-DROP TYPE ttype;
+DROP TYPE DIRECTION;
+DROP TYPE TRANSACTION_TYPE;
+DROP TYPE TRANSACTION_STATUS;
 
 DROP EXTENSION "uuid-ossp";

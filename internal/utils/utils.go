@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Coinbase Global, Inc.
+ * Copyright 2022-present Coinbase Global, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,12 @@
 package utils
 
 import (
+	"crypto/md5"
+	"fmt"
+	"math/big"
+	"strings"
+
+	"github.com/amzn/ion-go/ion"
 	api "github.com/coinbase-samples/ib-ledger-go/pkg/pbs/ledger/v1"
 )
 
@@ -44,4 +50,40 @@ func GetStringFromTransactionType(t api.TransactionType) (string, bool) {
 	default:
 		return "", false
 	}
+}
+
+func GenerateIdemString(params ...string) string {
+	hashedBytes := md5.Sum([]byte(strings.Join(params, "")))
+	return fmt.Sprintf("%x", hashedBytes)
+}
+
+func FormatProductId(debitCurrency, creditCurrency string) string {
+	return fmt.Sprintf("%s-%s", strings.ToUpper(creditCurrency), strings.ToUpper(debitCurrency))
+}
+
+func SplitProductId(productId string) (string, string) {
+	split := strings.Split(productId, "-")
+	if len(split) != 2 {
+		return "", ""
+	}
+	return split[0], split[1]
+}
+
+func IonDecimalToBigInt(i *ion.Decimal) (*big.Int, error) {
+	out, exp := i.CoEx()
+	if exp != 0 {
+		return nil, fmt.Errorf(
+			"bad input, ion decimal should only be wrapping an int: %s",
+			i.String(),
+		)
+	}
+
+	return out, nil
+}
+
+func SetString(i *big.Int, s string) error {
+	if _, ok := i.SetString(s, 10); !ok {
+		return fmt.Errorf("failed to convert %s to bigInt", s)
+	}
+	return nil
 }

@@ -57,17 +57,7 @@ func (m *InitializeAccountRequest) validate(all bool) error {
 
 	var errors []error
 
-	if utf8.RuneCountInString(m.GetPortfolioId()) != 36 {
-		err := InitializeAccountRequestValidationError{
-			field:  "PortfolioId",
-			reason: "value length must be 36 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-
-	}
+	// no validation rules for PortfolioId
 
 	if utf8.RuneCountInString(m.GetUserId()) != 36 {
 		err := InitializeAccountRequestValidationError{
@@ -91,6 +81,8 @@ func (m *InitializeAccountRequest) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for InitialBalance
 
 	if len(errors) > 0 {
 		return InitializeAccountRequestMultiError(errors)
@@ -193,86 +185,6 @@ func (m *InitializeAccountResponse) validate(all bool) error {
 	}
 
 	var errors []error
-
-	if m.GetAccount() == nil {
-		err := InitializeAccountResponseValidationError{
-			field:  "Account",
-			reason: "value is required",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if all {
-		switch v := interface{}(m.GetAccount()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, InitializeAccountResponseValidationError{
-					field:  "Account",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, InitializeAccountResponseValidationError{
-					field:  "Account",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetAccount()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return InitializeAccountResponseValidationError{
-				field:  "Account",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if m.GetAccountBalance() == nil {
-		err := InitializeAccountResponseValidationError{
-			field:  "AccountBalance",
-			reason: "value is required",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if all {
-		switch v := interface{}(m.GetAccountBalance()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, InitializeAccountResponseValidationError{
-					field:  "AccountBalance",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, InitializeAccountResponseValidationError{
-					field:  "AccountBalance",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetAccountBalance()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return InitializeAccountResponseValidationError{
-				field:  "AccountBalance",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
 
 	if len(errors) > 0 {
 		return InitializeAccountResponseMultiError(errors)
@@ -780,6 +692,17 @@ func (m *CreateTransactionRequest) validate(all bool) error {
 		}
 	}
 
+	if utf8.RuneCountInString(m.GetProductId()) < 7 {
+		err := CreateTransactionRequestValidationError{
+			field:  "ProductId",
+			reason: "value length must be at least 7 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return CreateTransactionRequestMultiError(errors)
 	}
@@ -882,35 +805,6 @@ func (m *CreateTransactionResponse) validate(all bool) error {
 
 	var errors []error
 
-	if all {
-		switch v := interface{}(m.GetTransaction()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CreateTransactionResponseValidationError{
-					field:  "Transaction",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CreateTransactionResponseValidationError{
-					field:  "Transaction",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetTransaction()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CreateTransactionResponseValidationError{
-				field:  "Transaction",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
 	if len(errors) > 0 {
 		return CreateTransactionResponseMultiError(errors)
 	}
@@ -991,22 +885,22 @@ var _ interface {
 	ErrorName() string
 } = CreateTransactionResponseValidationError{}
 
-// Validate checks the field values on PartialReleaseHoldRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *PartialReleaseHoldRequest) Validate() error {
+// Validate checks the field values on PostFillRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *PostFillRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on PartialReleaseHoldRequest with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on PostFillRequest with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// PartialReleaseHoldRequestMultiError, or nil if none found.
-func (m *PartialReleaseHoldRequest) ValidateAll() error {
+// PostFillRequestMultiError, or nil if none found.
+func (m *PostFillRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *PartialReleaseHoldRequest) validate(all bool) error {
+func (m *PostFillRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1014,7 +908,7 @@ func (m *PartialReleaseHoldRequest) validate(all bool) error {
 	var errors []error
 
 	if utf8.RuneCountInString(m.GetOrderId()) != 36 {
-		err := PartialReleaseHoldRequestValidationError{
+		err := PostFillRequestValidationError{
 			field:  "OrderId",
 			reason: "value length must be 36 runes",
 		}
@@ -1035,7 +929,7 @@ func (m *PartialReleaseHoldRequest) validate(all bool) error {
 		switch v := interface{}(m.GetVenueFeeAmount()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, PartialReleaseHoldRequestValidationError{
+				errors = append(errors, PostFillRequestValidationError{
 					field:  "VenueFeeAmount",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1043,7 +937,7 @@ func (m *PartialReleaseHoldRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, PartialReleaseHoldRequestValidationError{
+				errors = append(errors, PostFillRequestValidationError{
 					field:  "VenueFeeAmount",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1052,7 +946,7 @@ func (m *PartialReleaseHoldRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetVenueFeeAmount()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return PartialReleaseHoldRequestValidationError{
+			return PostFillRequestValidationError{
 				field:  "VenueFeeAmount",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1064,7 +958,7 @@ func (m *PartialReleaseHoldRequest) validate(all bool) error {
 		switch v := interface{}(m.GetRetailFeeAmount()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, PartialReleaseHoldRequestValidationError{
+				errors = append(errors, PostFillRequestValidationError{
 					field:  "RetailFeeAmount",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1072,7 +966,7 @@ func (m *PartialReleaseHoldRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, PartialReleaseHoldRequestValidationError{
+				errors = append(errors, PostFillRequestValidationError{
 					field:  "RetailFeeAmount",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1081,7 +975,7 @@ func (m *PartialReleaseHoldRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetRetailFeeAmount()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return PartialReleaseHoldRequestValidationError{
+			return PostFillRequestValidationError{
 				field:  "RetailFeeAmount",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1089,20 +983,58 @@ func (m *PartialReleaseHoldRequest) validate(all bool) error {
 		}
 	}
 
+	if utf8.RuneCountInString(m.GetFillId()) != 36 {
+		err := PostFillRequestValidationError{
+			field:  "FillId",
+			reason: "value length must be 36 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
+
+	// no validation rules for FilledQuantity
+
+	// no validation rules for FilledValue
+
+	if utf8.RuneCountInString(m.GetProductId()) < 7 {
+		err := PostFillRequestValidationError{
+			field:  "ProductId",
+			reason: "value length must be at least 7 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetSide()) < 3 {
+		err := PostFillRequestValidationError{
+			field:  "Side",
+			reason: "value length must be at least 3 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
-		return PartialReleaseHoldRequestMultiError(errors)
+		return PostFillRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// PartialReleaseHoldRequestMultiError is an error wrapping multiple validation
-// errors returned by PartialReleaseHoldRequest.ValidateAll() if the
-// designated constraints aren't met.
-type PartialReleaseHoldRequestMultiError []error
+// PostFillRequestMultiError is an error wrapping multiple validation errors
+// returned by PostFillRequest.ValidateAll() if the designated constraints
+// aren't met.
+type PostFillRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m PartialReleaseHoldRequestMultiError) Error() string {
+func (m PostFillRequestMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1111,11 +1043,11 @@ func (m PartialReleaseHoldRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m PartialReleaseHoldRequestMultiError) AllErrors() []error { return m }
+func (m PostFillRequestMultiError) AllErrors() []error { return m }
 
-// PartialReleaseHoldRequestValidationError is the validation error returned by
-// PartialReleaseHoldRequest.Validate if the designated constraints aren't met.
-type PartialReleaseHoldRequestValidationError struct {
+// PostFillRequestValidationError is the validation error returned by
+// PostFillRequest.Validate if the designated constraints aren't met.
+type PostFillRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1123,24 +1055,22 @@ type PartialReleaseHoldRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e PartialReleaseHoldRequestValidationError) Field() string { return e.field }
+func (e PostFillRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e PartialReleaseHoldRequestValidationError) Reason() string { return e.reason }
+func (e PostFillRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e PartialReleaseHoldRequestValidationError) Cause() error { return e.cause }
+func (e PostFillRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e PartialReleaseHoldRequestValidationError) Key() bool { return e.key }
+func (e PostFillRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e PartialReleaseHoldRequestValidationError) ErrorName() string {
-	return "PartialReleaseHoldRequestValidationError"
-}
+func (e PostFillRequestValidationError) ErrorName() string { return "PostFillRequestValidationError" }
 
 // Error satisfies the builtin error interface
-func (e PartialReleaseHoldRequestValidationError) Error() string {
+func (e PostFillRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1152,14 +1082,14 @@ func (e PartialReleaseHoldRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sPartialReleaseHoldRequest.%s: %s%s",
+		"invalid %sPostFillRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = PartialReleaseHoldRequestValidationError{}
+var _ error = PostFillRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -1167,75 +1097,44 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = PartialReleaseHoldRequestValidationError{}
+} = PostFillRequestValidationError{}
 
-// Validate checks the field values on PartialReleaseHoldResponse with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *PartialReleaseHoldResponse) Validate() error {
+// Validate checks the field values on PostFillResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *PostFillResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on PartialReleaseHoldResponse with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on PostFillResponse with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// PartialReleaseHoldResponseMultiError, or nil if none found.
-func (m *PartialReleaseHoldResponse) ValidateAll() error {
+// PostFillResponseMultiError, or nil if none found.
+func (m *PostFillResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *PartialReleaseHoldResponse) validate(all bool) error {
+func (m *PostFillResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	// no validation rules for Successful
-
-	if all {
-		switch v := interface{}(m.GetFailureMessage()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, PartialReleaseHoldResponseValidationError{
-					field:  "FailureMessage",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, PartialReleaseHoldResponseValidationError{
-					field:  "FailureMessage",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetFailureMessage()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return PartialReleaseHoldResponseValidationError{
-				field:  "FailureMessage",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
 	if len(errors) > 0 {
-		return PartialReleaseHoldResponseMultiError(errors)
+		return PostFillResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// PartialReleaseHoldResponseMultiError is an error wrapping multiple
-// validation errors returned by PartialReleaseHoldResponse.ValidateAll() if
-// the designated constraints aren't met.
-type PartialReleaseHoldResponseMultiError []error
+// PostFillResponseMultiError is an error wrapping multiple validation errors
+// returned by PostFillResponse.ValidateAll() if the designated constraints
+// aren't met.
+type PostFillResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m PartialReleaseHoldResponseMultiError) Error() string {
+func (m PostFillResponseMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1244,11 +1143,11 @@ func (m PartialReleaseHoldResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m PartialReleaseHoldResponseMultiError) AllErrors() []error { return m }
+func (m PostFillResponseMultiError) AllErrors() []error { return m }
 
-// PartialReleaseHoldResponseValidationError is the validation error returned
-// by PartialReleaseHoldResponse.Validate if the designated constraints aren't met.
-type PartialReleaseHoldResponseValidationError struct {
+// PostFillResponseValidationError is the validation error returned by
+// PostFillResponse.Validate if the designated constraints aren't met.
+type PostFillResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1256,24 +1155,22 @@ type PartialReleaseHoldResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e PartialReleaseHoldResponseValidationError) Field() string { return e.field }
+func (e PostFillResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e PartialReleaseHoldResponseValidationError) Reason() string { return e.reason }
+func (e PostFillResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e PartialReleaseHoldResponseValidationError) Cause() error { return e.cause }
+func (e PostFillResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e PartialReleaseHoldResponseValidationError) Key() bool { return e.key }
+func (e PostFillResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e PartialReleaseHoldResponseValidationError) ErrorName() string {
-	return "PartialReleaseHoldResponseValidationError"
-}
+func (e PostFillResponseValidationError) ErrorName() string { return "PostFillResponseValidationError" }
 
 // Error satisfies the builtin error interface
-func (e PartialReleaseHoldResponseValidationError) Error() string {
+func (e PostFillResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1285,14 +1182,14 @@ func (e PartialReleaseHoldResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sPartialReleaseHoldResponse.%s: %s%s",
+		"invalid %sPostFillResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = PartialReleaseHoldResponseValidationError{}
+var _ error = PostFillResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -1300,7 +1197,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = PartialReleaseHoldResponseValidationError{}
+} = PostFillResponseValidationError{}
 
 // Validate checks the field values on FinalizeTransactionRequest with the
 // rules defined in the proto definition for this message. If any rules are
@@ -1557,37 +1454,6 @@ func (m *FinalizeTransactionResponse) validate(all bool) error {
 	}
 
 	var errors []error
-
-	// no validation rules for Successful
-
-	if all {
-		switch v := interface{}(m.GetFailureMessage()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, FinalizeTransactionResponseValidationError{
-					field:  "FailureMessage",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, FinalizeTransactionResponseValidationError{
-					field:  "FailureMessage",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetFailureMessage()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return FinalizeTransactionResponseValidationError{
-				field:  "FailureMessage",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
 
 	if len(errors) > 0 {
 		return FinalizeTransactionResponseMultiError(errors)
